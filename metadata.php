@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Nets Oxid Payment module metadata
  *
@@ -6,8 +7,6 @@
  * @package Nets
  * @copyright nets
  */
-
-
 /**
  * Metadata version
  */
@@ -28,17 +27,16 @@ $aModule = array(
         'de' => 'Nets einfach sicher zahlen',
         'en' => 'Nets safe online payments'
     ),
-    'controllers' => array(       
-        'es_netseasy_Thankyou' => \Es\NetsEasy\Application\Controller\ThankyouController::class,
-        'es_netseasy_OrderOverview' => \Es\NetsEasy\Application\Controller\Admin\OrderOverviewController::class        
+    'controllers' => array(
+        'es_netseasy_Thankyou' => \Es\NetsEasy\extend\Application\Controller\ThankyouController::class,
+        'es_netseasy_OrderOverview' => \Es\NetsEasy\extend\Application\Controller\Admin\OrderOverviewController::class
     ),
     'extend' => array(
-				\OxidEsales\Eshop\Application\Controller\OrderController::class => \Es\NetsEasy\extend\Application\Controller\OrderController::class,
-                \OxidEsales\Eshop\Application\Controller\PaymentController::class => \Es\NetsEasy\extend\Application\Controller\PaymentController::class,
-				\Es\NetsEasy\Application\Models\PaymentGateway::class => \Es\NetsEasy\Application\Models\PaymentGateway::class,
-				\Es\NetsEasy\Core\Events::class => \Es\NetsEasy\Core\Events::class                   
-
-    ),   
+        \OxidEsales\Eshop\Application\Controller\OrderController::class => \Es\NetsEasy\extend\Application\Controller\OrderController::class,
+        \OxidEsales\Eshop\Application\Controller\PaymentController::class => \Es\NetsEasy\extend\Application\Controller\PaymentController::class,
+        \Es\NetsEasy\extend\Application\Models\PaymentGateway::class => Es\NetsEasy\extend\Application\Models\PaymentGateway::class,
+        \Es\NetsEasy\Core\Events::class => \Es\NetsEasy\Core\Events::class
+    ),
     'blocks' => array(
         array(
             'template' => 'order_overview.tpl',
@@ -143,9 +141,9 @@ $aModule = array(
             'value' => 'false'
         )
     ),
-    'templates' => array(),    
-    'events'       => array(
-        'onActivate'   => '\Es\NetsEasy\Core\Events::onActivate',
+    'templates' => array(),
+    'events' => array(
+        'onActivate' => '\Es\NetsEasy\Core\Events::onActivate',
         'onDeactivate' => '\Es\NetsEasy\Core\Events::onDeactivate'
     )
 );
