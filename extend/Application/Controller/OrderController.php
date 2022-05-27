@@ -408,7 +408,7 @@ class OrderController extends OrderController_parent
 
         $oDelAd = $oOrder->getDelAddressInfo();
         if ($oDelAd) {
-            $delivery_address = new stdClass();
+            $delivery_address = new \stdClass();
             $delivery_address->firstname = $oDelAd->oxaddress__oxfname->value;
             $delivery_address->lastname = $oDelAd->oxaddress__oxlname->value;
             $delivery_address->street = $oDelAd->oxaddress__oxstreet->value;
@@ -422,7 +422,7 @@ class OrderController extends OrderController_parent
             $delivery_address->company = $oDelAd->oxaddress__oxcompany->value;
             $daten['delivery_address'] = $delivery_address;
         } else {
-            $delivery_address = new stdClass();
+            $delivery_address = new \stdClass();
             $delivery_address->firstname = $oUser->oxuser__oxfname->value;
             $delivery_address->lastname = $oUser->oxuser__oxlname->value;
             $delivery_address->street = $oUser->oxuser__oxstreet->value;
@@ -493,13 +493,13 @@ class OrderController extends OrderController_parent
         }
 
         try {
-            NetsLog::log($this->_NetsLog, "NetsOrder, api request data here 2 : ", json_encode(utf8_ensure($data)));
+            NetsLog::log($this->_NetsLog, "NetsOrder, api request data here 2 : ", json_encode($data));
             $api_return = $this->getCurlResponse($apiUrl, 'POST', json_encode($data));
             $response = json_decode($api_return, true);
 
             NetsLog::log($this->_NetsLog, "NetsOrder, api return data create trans: ", json_decode($api_return, true));
             // create entry in oxnets table for transaction
-            nets_table::createTransactionEntry(json_encode(utf8_ensure($data)), $api_return, $this->getOrderId(), $response['paymentId'], $oID, intval(strval($oBasket->getPrice()->getBruttoPrice() * 100)));
+            NetsLog::createTransactionEntry(json_encode($data), $api_return, $this->getOrderId(), $response['paymentId'], $oID, intval(strval($oBasket->getPrice()->getBruttoPrice() * 100)));
 
             // Set language for hosted payment page
             $language = \oxRegistry::getLang()->getLanguageAbbr();

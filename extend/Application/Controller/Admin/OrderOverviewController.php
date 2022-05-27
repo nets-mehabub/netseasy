@@ -41,7 +41,7 @@ class OrderOverviewController extends OrderOverviewController_parent
         if ($payMethod == 'nets_easy') {
             $payment_id = $this->getPaymentId($oxoder_id);
             if (empty($payment_id)) {
-                $oDb = oxDb::getDb();
+                $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
                 $oDb->execute("UPDATE oxnets SET payment_status = ? WHERE transaction_id = ? ", [
                     1,
                     $this->getPaymentId($oxoder_id)
@@ -56,7 +56,7 @@ class OrderOverviewController extends OrderOverviewController_parent
             }
 
             // Get order db status from oxorder if cancelled
-            $oDB = oxDb::getDb(true);
+            $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
             $sSQL_select = "SELECT oxstorno FROM oxorder WHERE oxid = ? LIMIT 1";
             $orderCancel = $oDB->getOne($sSQL_select, [
                 $oxoder_id
@@ -121,7 +121,7 @@ class OrderOverviewController extends OrderOverviewController_parent
                         $paymentStatus = "Partial Charged";
                         $langStatus = "partial_charge";
                         $dbPayStatus = 3; // For payment status as Partial Charged in oxnets db table
-                        $oDB = oxDb::getDb(true);
+                        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
                         $oDB->Execute("UPDATE oxnets SET partial_amount = '{$partialc}' WHERE oxorder_id = '{$oxoder_id}'");
                         $oDB->Execute("UPDATE oxnets SET charge_id = '{$chargeid}' WHERE oxorder_id = '{$oxoder_id}'");
                         $oDB->Execute("UPDATE oxorder SET oxpaid = '{$chargedate}' WHERE oxid = '{$oxoder_id}'");
@@ -133,7 +133,7 @@ class OrderOverviewController extends OrderOverviewController_parent
                             $paymentStatus = "Partial Refunded";
                             $langStatus = "partial_refund";
                             $dbPayStatus = 5; // For payment status as Partial Charged in oxnets db table
-                            $oDB = oxDb::getDb(true);
+                            $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
                             $oDB->Execute("UPDATE oxnets SET partial_amount = '{$partialr}' WHERE oxorder_id = '{$oxoder_id}'");
                             $oDB->Execute("UPDATE oxnets SET charge_id = '{$chargeid}' WHERE oxorder_id = '{$oxoder_id}'");
                             $oDB->Execute("UPDATE oxorder SET oxpaid = '{$chargedate}' WHERE oxid = '{$oxoder_id}'");
@@ -157,7 +157,7 @@ class OrderOverviewController extends OrderOverviewController_parent
                 $langStatus = "failed";
                 $dbPayStatus = 0; // For payment status as Failed in oxnets db table
             }
-            $oDb = oxDb::getDb();
+            $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
             $oDb->execute("UPDATE oxnets SET payment_status = ? WHERE transaction_id = ? ", [
                 $dbPayStatus,
                 $this->getPaymentId($oxoder_id)
@@ -222,18 +222,18 @@ class OrderOverviewController extends OrderOverviewController_parent
         $response = json_decode($api_return, true);
 
         NetsLog::log($this->_NetsLog, "Nets_Order_Overview" . $response);
-        $oDB = oxDb::getDb(true);
+        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
         $dt = date("Y-m-d H:i:s");
         $oDB->Execute("UPDATE oxorder SET oxpaid = '{$dt}'
 		WHERE oxid = '{$oxorder}'");
 
         // save charge details in db for partial refund
         if (isset($ref) && isset($response['chargeId'])) {
-            $oDB = oxDb::getDb(true);
+            $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
             $charge_query = "INSERT INTO `oxnets` (`transaction_id`, `charge_id`,  `product_ref`, `charge_qty`, `charge_left_qty`) " . "values ('" . $payment_id . "', '" . $response['chargeId'] . "', '" . $ref . "', '" . $chargeQty . "', '" . $chargeQty . "')";
             $oDB->Execute($charge_query);
         } else {
-            $oDB = oxDb::getDb(true);
+            $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
             if (isset($response['chargeId'])) {
                 foreach ($data['items'] as $key => $value) {
                     $charge_query = "INSERT INTO `oxnets` (`transaction_id`,`charge_id`,  `product_ref`, `charge_qty`, `charge_left_qty`) " . "values ('" . $payment_id . "', '" . $response['chargeId'] . "', '" . $value['reference'] . "', '" . $value['quantity'] . "', '" . $value['quantity'] . "')";
@@ -278,13 +278,13 @@ class OrderOverviewController extends OrderOverviewController_parent
                 $this->getCurlResponse($refundUrl, 'POST', json_encode($body));
 
                 // table update forcharge refund quantity
-                $oDb = oxDb::getDb();
+                $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
                 $oDb->execute("UPDATE oxnets SET charge_left_qty = 0 WHERE transaction_id = '" . $payment_id . "' AND charge_id = '" . $val['chargeId'] . "'");
 
                 NetsLog::log($this->_NetsLog, "Nets_Order_Overview getorder refund" . json_encode($body));
             } else if (in_array($ref, array_column($val['orderItems'], 'reference'))) {
 
-                $oDb = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
+                $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(\OxidEsales\Eshop\Core\DatabaseProvider::FETCH_MODE_ASSOC);
                 $charge_query = $oDb->getAll("SELECT `transaction_id`, `charge_id`,  `product_ref`, `charge_qty`, `charge_left_qty` FROM oxnets WHERE transaction_id = ? AND charge_id = ? AND product_ref = ? AND charge_left_qty !=0", [
                     $payment_id,
                     $val['chargeId'],
@@ -310,7 +310,7 @@ class OrderOverviewController extends OrderOverviewController_parent
                         $this->getCurlResponse($refundUrl, 'POST', json_encode($body));
                         NetsLog::log($this->_NetsLog, "Nets_Order_Overview getorder refund" . json_encode($body));
 
-                        $oDb = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
+                        $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(\OxidEsales\Eshop\Core\DatabaseProvider::FETCH_MODE_ASSOC);
                         $singlecharge_query = $oDb->getAll("SELECT  `charge_left_qty` FROM oxnets WHERE transaction_id = ? AND charge_id = ? AND product_ref = ? AND charge_left_qty !=0", [
                             $payment_id,
                             $val['chargeId'],
@@ -326,7 +326,7 @@ class OrderOverviewController extends OrderOverviewController_parent
                             $charge_left_qty = - $charge_left_qty;
                         }
 
-                        $oDb = oxDb::getDb();
+                        $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
                         $oDb->execute("UPDATE oxnets SET charge_left_qty = $charge_left_qty WHERE transaction_id = '" . $payment_id . "' AND charge_id = '" . $key . "' AND product_ref = '" . $ref . "'");
                     }
 
@@ -654,7 +654,7 @@ class OrderOverviewController extends OrderOverviewController_parent
      */
     public function getPartial($oxoder_id)
     {
-        $oDB = oxDb::getDb(true);
+        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
         $sSQL_select = "SELECT partial_amount FROM oxnets WHERE oxorder_id = ? LIMIT 1";
         $partial_amount = $oDB->getOne($sSQL_select, [
             $oxoder_id
@@ -701,7 +701,7 @@ class OrderOverviewController extends OrderOverviewController_parent
      */
     public function getPaymentId($oxoder_id)
     {
-        $oDB = oxDb::getDb(true);
+        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
         $sSQL_select = "SELECT transaction_id FROM oxnets WHERE oxorder_id = ? LIMIT 1";
         $payment_id = $oDB->getOne($sSQL_select, [
             $oxoder_id
@@ -716,7 +716,7 @@ class OrderOverviewController extends OrderOverviewController_parent
      */
     public function getPaymentMethod($oxoder_id)
     {
-        $oDB = oxDb::getDb(true);
+        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
         $sSQL_select = "SELECT OXPAYMENTTYPE FROM oxorder WHERE oxid = ? LIMIT 1";
         $payMethod = $oDB->getOne($sSQL_select, [
             $oxoder_id
