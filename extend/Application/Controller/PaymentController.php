@@ -35,7 +35,7 @@ class PaymentController extends PaymentController_parent
 	public function getNetsPaymentTypes()
 	{
 		$this->payment_types_active = array();
-		$oDB = oxDb::getDb(true);
+		$oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
 		$sSql = "SELECT OXID FROM oxpayments WHERE oxactive = 1";
 		$active_payment_ids = $oDB->getAll($sSql);
 		if (! empty($active_payment_ids)) {

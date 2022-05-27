@@ -69,7 +69,9 @@ class OrderController extends OrderController_parent
             try {
                 if ($this->is_embedded()) {
                     $sess_id = $this->getSession()->getVariable('sess_challenge');
-                    $oDB = \oxDb::getDb(true);
+                    //$resultSet = \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->select($query);
+
+                    $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
                     $sSQL_select = "SELECT oxorder_id FROM oxnets WHERE oxorder_id = ? LIMIT 1";
                     $order_id = $oDB->getOne($sSQL_select, [
                         $sess_id
@@ -87,7 +89,7 @@ class OrderController extends OrderController_parent
                     $paymentId = $this->getSession()->getVariable('payment_id');
                     $this->getSession()->setVariable('orderNr', $orderNr);
                     NetsLog::log($this->_NetsLog, " refupdate NetsOrder, order nr", $oOrder->oxorder__oxordernr->value);
-                    $oDb = \oxDb::getDb();
+                    $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
 
                     $oDb->execute("UPDATE oxnets SET oxordernr = ?,  hash = ?, oxorder_id = ? WHERE transaction_id = ? ", [
                         $orderNr,
@@ -118,7 +120,7 @@ class OrderController extends OrderController_parent
                             foreach ($api_ret['payment']['charges'] as $ky => $val) {
                                 foreach ($val['orderItems'] as $key => $value) {
                                     if (isset($val['chargeId'])) {
-                                        $oDB = \oxDb::getDb(true);
+                                        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
                                         $charge_query = "INSERT INTO `oxnets` (`transaction_id`, `charge_id`,  `product_ref`, `charge_qty`, `charge_left_qty`) " . "values ('" . $paymentId . "', '" . $val['chargeId'] . "', '" . $value['reference'] . "', '" . $value['quantity'] . "', '" . $value['quantity'] . "')";
                                         $oDB->Execute($charge_query);
                                     }
@@ -195,7 +197,7 @@ class OrderController extends OrderController_parent
         NetsLog::log($this->_NetsLog, "NetsOrder, update_ordernr: " . $oOrdernr . " for hash " . $hash);
 
         if (is_numeric($oOrdernr) && ! empty($hash)) {
-            $oDb = \oxDb::getDb();
+            $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
             $oDb->execute("UPDATE oxnets SET oxordernr = ? WHERE hash = ?", [
                 $oOrdernr,
                 $hash
@@ -219,7 +221,7 @@ class OrderController extends OrderController_parent
         $this->getSession()->deleteVariable('nets_err_msg');
         NetsLog::log($this->_NetsLog, "NetsOrder createNetsTransaction");
         $items = [];
-        $oDB = \oxDb::GetDB();
+        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
         $integrationType = self::HOSTED;
 
         $sUserID = $this->getSession()->getVariable("usr");
@@ -567,7 +569,7 @@ class OrderController extends OrderController_parent
                 foreach ($api_ret['payment']['charges'] as $ky => $val) {
                     foreach ($val['orderItems'] as $key => $value) {
                         if (isset($val['chargeId'])) {
-                            $oDB = \oxDb::getDb(true);
+                            $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
                             $charge_query = "INSERT INTO `oxnets` (`transaction_id`, `charge_id`,  `product_ref`, `charge_qty`, `charge_left_qty`) " . "values ('" . $paymentId . "', '" . $val['chargeId'] . "', '" . $value['reference'] . "', '" . $value['quantity'] . "', '" . $value['quantity'] . "')";
                             $oDB->Execute($charge_query);
                         }
@@ -613,7 +615,7 @@ class OrderController extends OrderController_parent
     public function is_embedded()
     {
         $mode = $this->getConfig()->getConfigParam('nets_checkout_mode');
-        $oDB = \oxDb::getDb(true);
+        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
         $sSQL_select = "SELECT OXACTIVE FROM oxpayments WHERE oxid = ? LIMIT 1";
         $payMethod = $oDB->getOne($sSQL_select, [
             self::MODULE_NAME
@@ -718,7 +720,7 @@ class OrderController extends OrderController_parent
 
     public function getPaymentId($oxoder_id)
     {
-        $oDB = \oxDb::getDb(true);
+        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
         $sSQL_select = "SELECT transaction_id FROM oxnets WHERE oxorder_id = ? LIMIT 1";
         $payment_id = $oDB->getOne($sSQL_select, [
             $oxoder_id

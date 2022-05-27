@@ -58,7 +58,7 @@ class Events
     private static function checkPayment($payment_id)
     {
         try {
-            $oDB = \oxDb::getDb(true);
+            $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
             $payment_id_exists = $oDB->getOne("SELECT oxid FROM oxpayments WHERE oxid = ?", [
                 $payment_id
             ]);
@@ -74,7 +74,7 @@ class Events
     private static function activatePayment($payment_id, $active = 1)
     {
         try {
-            $oDB = \oxDb::getDb(true);
+            $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
             $oDB->execute("UPDATE oxpayments SET oxactive = ? WHERE oxid = ?", [
                 $active,
                 $payment_id
@@ -90,7 +90,7 @@ class Events
         try {
             $desc = NetsPaymentTypes::getNetsPaymentDesc($payment_id);
             if (isset($desc) && $desc) {
-                $oDB = \oxDb::getDb(true);
+                $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
                 $sSql = "
 					INSERT INTO oxpayments (
 						`OXID`, `OXACTIVE`, `OXDESC`, `OXADDSUM`, `OXADDSUMTYPE`, `OXFROMBONI`, `OXFROMAMOUNT`, `OXTOAMOUNT`,
@@ -119,7 +119,7 @@ class Events
     private static function checkTableStructure()
     {
         try {
-            $oDB = \oxDb::getDb(true);
+            $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
             foreach (self::$nets_table_names as $table_name) {
                 $table_exists = $oDB->getOne("SHOW TABLES LIKE '" . $table_name . "'");
                 if (! isset($table_exists) || ! $table_exists) {
@@ -158,7 +158,7 @@ class Events
     private static function createTableStructure($table_name = 'oxnets')
     {
         try {
-            $oDB = \oxDb::getDb(true);
+            $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
             switch ($table_name) {
                 case 'oxnets':
                     // table oxnets
