@@ -23,7 +23,7 @@
 	[{assign var="checkoutKey" value=$oView->getCheckoutKey()}]
 	[{assign var="paymentId" value=$oView->getPaymentApiResponse()}]
 	
-	[{oxstyle include=$oViewConf->getModuleUrl("nets", "out/src/css/embedded.css")}]
+	[{oxstyle include=$oViewConf->getModuleUrl("esnetseasy", "out/src/css/embedded.css")}]
 	
 	<div id="dibs-block" class="agb card">
 		<div class="card-header">

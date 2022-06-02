@@ -175,17 +175,17 @@ class OrderOverviewController extends OrderOverviewController_parent
      */
     public function getOrderCharged()
     {
-        $stoken = oxRegistry::getConfig()->getRequestParameter('stoken');
-        $admin_sid = oxRegistry::getConfig()->getRequestParameter('force_admin_sid');
-        $oxorder = oxRegistry::getConfig()->getRequestParameter('oxorderid');
-        $orderno = oxRegistry::getConfig()->getRequestParameter('orderno');
+        $stoken = \oxRegistry::getConfig()->getRequestParameter('stoken');
+        $admin_sid = \oxRegistry::getConfig()->getRequestParameter('force_admin_sid');
+        $oxorder = \oxRegistry::getConfig()->getRequestParameter('oxorderid');
+        $orderno = \oxRegistry::getConfig()->getRequestParameter('orderno');
         $data = $this->getOrderItems($oxorder);
         $payment_id = $this->getPaymentId($oxorder);
 
         // call charge api here
         $chargeUrl = $this->getChargePaymentUrl($payment_id);
-        $ref = oxRegistry::getConfig()->getRequestParameter('reference');
-        $chargeQty = oxRegistry::getConfig()->getRequestParameter('charge');
+        $ref = \oxRegistry::getConfig()->getRequestParameter('reference');
+        $chargeQty = \oxRegistry::getConfig()->getRequestParameter('charge');
 
         if (isset($ref) && isset($chargeQty)) {
             $totalAmount = 0;
@@ -242,7 +242,7 @@ class OrderOverviewController extends OrderOverviewController_parent
             }
         }
 
-        oxRegistry::getUtils()->redirect($this->getConfig()
+        \oxRegistry::getUtils()->redirect($this->getConfig()
             ->getSslShopUrl() . 'admin/index.php?cl=admin_order&force_admin_sid' . $admin_sid . '&stoken=' . $stoken);
     }
 
@@ -252,14 +252,14 @@ class OrderOverviewController extends OrderOverviewController_parent
      */
     public function getOrderRefund()
     {
-        $stoken = oxRegistry::getConfig()->getRequestParameter('stoken');
-        $admin_sid = oxRegistry::getConfig()->getRequestParameter('force_admin_sid');
-        $oxorder = oxRegistry::getConfig()->getRequestParameter('oxorderid');
-        $orderno = oxRegistry::getConfig()->getRequestParameter('orderno');
+        $stoken = \oxRegistry::getConfig()->getRequestParameter('stoken');
+        $admin_sid = \oxRegistry::getConfig()->getRequestParameter('force_admin_sid');
+        $oxorder = \oxRegistry::getConfig()->getRequestParameter('oxorderid');
+        $orderno = \oxRegistry::getConfig()->getRequestParameter('orderno');
         $data = $this->getOrderItems($oxorder);
         $chargeResponse = $this->getChargeId($oxorder);
-        $ref = oxRegistry::getConfig()->getRequestParameter('reference');
-        $refundQty = oxRegistry::getConfig()->getRequestParameter('refund');
+        $ref = \oxRegistry::getConfig()->getRequestParameter('reference');
+        $refundQty = \oxRegistry::getConfig()->getRequestParameter('refund');
         $payment_id = $this->getPaymentId($oxorder);
         $refundEachQtyArr = array();
         $breakloop = false;
@@ -335,7 +335,7 @@ class OrderOverviewController extends OrderOverviewController_parent
             }
         }
 
-        oxRegistry::getUtils()->redirect($this->getConfig()
+        \oxRegistry::getUtils()->redirect($this->getConfig()
             ->getSslShopUrl() . 'admin/index.php?cl=admin_order&force_admin_sid' . $admin_sid . '&stoken=' . $stoken);
     }
 
@@ -375,10 +375,10 @@ class OrderOverviewController extends OrderOverviewController_parent
      */
     public function getOrderCancel()
     {
-        $stoken = oxRegistry::getConfig()->getRequestParameter('stoken');
-        $admin_sid = oxRegistry::getConfig()->getRequestParameter('force_admin_sid');
-        $oxorder = oxRegistry::getConfig()->getRequestParameter('oxorderid');
-        $orderno = oxRegistry::getConfig()->getRequestParameter('orderno');
+        $stoken = \oxRegistry::getConfig()->getRequestParameter('stoken');
+        $admin_sid = \oxRegistry::getConfig()->getRequestParameter('force_admin_sid');
+        $oxorder = \oxRegistry::getConfig()->getRequestParameter('oxorderid');
+        $orderno = \oxRegistry::getConfig()->getRequestParameter('orderno');
         $data = $this->getOrderItems($oxorder);
         $payment_id = $this->getPaymentId($oxorder);
 
@@ -392,7 +392,7 @@ class OrderOverviewController extends OrderOverviewController_parent
         $api_return = $this->getCurlResponse($cancelUrl, 'POST', json_encode($body));
         $response = json_decode($api_return, true);
 
-        oxRegistry::getUtils()->redirect($this->getConfig()
+        \oxRegistry::getUtils()->redirect($this->getConfig()
             ->getSslShopUrl() . 'admin/index.php?cl=admin_order&force_admin_sid' . $admin_sid . '&stoken=' . $stoken);
     }
 

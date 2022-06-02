@@ -3,12 +3,12 @@
 	[{ assign var="deBug" value=$oView->debugMode() }]
 	[{ if $status.paymentErr }] 
 		<div class="nets-container">
-			<link rel="stylesheet" href="[{$oViewConf->getModuleUrl('nets', 'out/admin/src/css/order.css')}]" type="text/css"/>
+			<link rel="stylesheet" href="[{$oViewConf->getModuleUrl('esnetseasy', 'out/admin/src/css/order.css')}]" type="text/css"/>
 			<div class="nets-logo"> [{ assign var="langText" value=$status.langStatus }] 
 				<div class="status">
 					[{ oxmultilang ident="SHOP_MODULE_nets_status" }] : <span class="fail">[{ oxmultilang ident="SHOP_MODULE_nets_paystatus_failed" }]</span>
 				</div>
-				<img src="[{ $oViewConf->getModuleUrl('nets') }]/out/src/img/nets_easy.png">
+				<img src="[{ $oViewConf->getModuleUrl('esnetseasy') }]/out/src/img/nets_easy.png">
 			</div>
 			<div class="nets-header"><b>[{ oxmultilang ident="SHOP_MODULE_nets_payment_failed_msg" }]</b></div>
 		</div>
@@ -17,7 +17,7 @@
 	[{ if $status.payStatus }] 
 		[{ $smarty.block.parent }]
 
-		<link rel="stylesheet" href="[{$oViewConf->getModuleUrl('nets', 'out/admin/src/css/order.css')}]" type="text/css"/>
+		<link rel="stylesheet" href="[{$oViewConf->getModuleUrl('esnetseasy', 'out/admin/src/css/order.css')}]" type="text/css"/>
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 
@@ -27,7 +27,7 @@
 				<div class="status">
 					[{ oxmultilang ident="SHOP_MODULE_nets_status" }] : <span>[{ oxmultilang ident="SHOP_MODULE_nets_paystatus_$langText" }]</span>
 				</div>
-				<img src="[{ $oViewConf->getModuleUrl('nets') }]/out/src/img/nets_easy.png">
+				<img src="[{ $oViewConf->getModuleUrl('esnetseasy') }]/out/src/img/nets_easy.png">
 			</div>
 			<div class="nets-header"><b>Payment ID :</b> [{ $oView->getPaymentId($oxid) }]</div>
 			<div class="nets-block">
@@ -95,7 +95,7 @@
 									  class="nets-btn capture" 
 									  name="charge" value="[{ $listitem.quantity }]"
 									/>
-										<img src="[{ $oViewConf->getModuleUrl('nets', 'out/admin/src/img/charge.png') }]" alt=""/>
+										<img src="[{ $oViewConf->getModuleUrl('esnetseasy', 'out/admin/src/img/charge.png') }]" alt=""/>
 									</button>
 								</form>
 							</td> 
@@ -149,7 +149,7 @@
 									  name="refund" 
 									  value="[{$prodval.quantity}]"
 									/>
-										<img src="[{$oViewConf->getModuleUrl('nets', 'out/admin/src/img/refund.png')}]" alt="refund"/>
+										<img src="[{$oViewConf->getModuleUrl('esnetseasy', 'out/admin/src/img/refund.png')}]" alt="refund"/>
 									</button>
 								</form>
 							</td>
@@ -219,7 +219,7 @@
 			<textarea>[{ $oView->getResponse($oxid) }]</textarea>
 		[{/if}]
 
-		<script src="[{ $oViewConf->getModuleUrl('nets', 'out/admin/src/js/order.js') }]"></script>
+		<script src="[{ $oViewConf->getModuleUrl('esnetseasy', 'out/admin/src/js/order.js') }]"></script>
 	[{/if}]
 [{else}]
 	[{$smarty.block.parent}] 

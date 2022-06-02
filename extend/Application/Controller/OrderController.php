@@ -455,8 +455,8 @@ class OrderController extends OrderController_parent
         if ($this->getConfig()->getConfigParam('nets_checkout_mode') == 'embedded') {
             $data['checkout']['url'] = urldecode(\oxRegistry::getConfig()->getShopUrl() . 'index.php?cl=thankyou');
         } else {
-            $data['checkout']['returnUrl'] = urldecode(\oxRegistry::getConfig()->getShopUrl() . 'index.php?cl=netsorder&fnc=returnhosted&paymentid=' . $paymentId);
-            $data['checkout']['cancelUrl'] = urldecode(\oxRegistry::getConfig()->getShopUrl() . 'index.php?cl=netsorder');
+            $data['checkout']['returnUrl'] = urldecode(\oxRegistry::getConfig()->getShopUrl() . 'index.php?cl=order&fnc=returnhosted&paymentid=' . $paymentId);
+            $data['checkout']['cancelUrl'] = urldecode(\oxRegistry::getConfig()->getShopUrl() . 'index.php?cl=order');
         }
 
         // if autocapture is enabled in nets module settings, pass it to nets api
@@ -496,7 +496,7 @@ class OrderController extends OrderController_parent
             NetsLog::log($this->_NetsLog, "NetsOrder, api request data here 2 : ", json_encode($data));
             $api_return = $this->getCurlResponse($apiUrl, 'POST', json_encode($data));
             $response = json_decode($api_return, true);
-
+            //echo "<pre>";print_r($response);die;
             NetsLog::log($this->_NetsLog, "NetsOrder, api return data create trans: ", json_decode($api_return, true));
             // create entry in oxnets table for transaction
             NetsLog::createTransactionEntry(json_encode($data), $api_return, $this->getOrderId(), $response['paymentId'], $oID, intval(strval($oBasket->getPrice()->getBruttoPrice() * 100)));
@@ -736,7 +736,7 @@ class OrderController extends OrderController_parent
     {
         return \oxRegistry::getConfig()->getActiveView()
             ->getViewConfig()
-            ->getModuleUrl("nets", "out/src/js/") . $this->getConfig()->getConfigParam('nets_layout_mode') . '.js';
+            ->getModuleUrl("esnetseasy", "out/src/js/") . $this->getConfig()->getConfigParam('nets_layout_mode') . '.js';
     }
 
     /* curl request to execute api calls */
