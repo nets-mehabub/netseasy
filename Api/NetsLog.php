@@ -1,11 +1,19 @@
-<?php namespace Es\NetsEasy\Api;
+<?php
 
+namespace Es\NetsEasy\Api;
+
+/**
+ * Class defines how module save the logs.
+ */
 if (!class_exists("NetsLog")) {
 
     class NetsLog {
-
+        /**
+         * save log details in nets file 
+         * @return null
+         */
         static function log($log) {
-            // static function log() {
+
             if (!$log) {
                 return;
             }
@@ -27,7 +35,10 @@ if (!class_exists("NetsLog")) {
                 }
             }
         }
-
+        /**
+         * validate utf8 string 
+         * @return bool
+         */
         static function seems_utf8($Str) {
             for ($i = 0; $i < strlen($Str); $i ++) {
                 if (ord($Str[$i]) < 0x80)
@@ -55,6 +66,10 @@ if (!class_exists("NetsLog")) {
             return true;
         }
 
+        /**
+         * check utf8 string 
+         * @return $data array
+         */
         static function utf8_ensure($data) {
             if (is_string($data)) {
                 return $this->seems_utf8($data) ? $data : \utf8_encode($data);
@@ -75,19 +90,12 @@ if (!class_exists("NetsLog")) {
         }
 
         /**
-         *
-         * @param
-         *            $req_data
-         * @param
-         *            $ret_data
-         * @param
-         *            $hash
-         * @param
-         *            $payment_method
-         * @param
-         *            $oxorder_id
-         * @param
-         *            $amount
+         * Create transaction id in db
+         * @param     $req_data
+         * @param     $hash
+         * @param     $payment_method
+         * @param     $oxorder_id
+         * @param     $amount
          * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
          * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
          */
@@ -105,11 +113,9 @@ if (!class_exists("NetsLog")) {
         }
 
         /**
-         *
-         * @param
-         *            $hash
-         * @param
-         *            $transaction_id
+         * Set transaction id in db
+         * @param $hash
+         * @param $transaction_id
          * @param bool $log_error
          * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
          * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException

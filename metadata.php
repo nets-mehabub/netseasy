@@ -35,7 +35,8 @@ $aModule = array(
         \OxidEsales\Eshop\Application\Controller\OrderController::class => \Es\NetsEasy\extend\Application\Controller\OrderController::class,
         \OxidEsales\Eshop\Application\Controller\PaymentController::class => \Es\NetsEasy\extend\Application\Controller\PaymentController::class,
         \OxidEsales\Eshop\Application\Controller\ThankYouController::class => \Es\NetsEasy\extend\Application\Controller\ThankyouController::class,
-        \Es\NetsEasy\extend\Application\Models\PaymentGateway::class => Es\NetsEasy\extend\Application\Models\PaymentGateway::class,
+        \Es\NetsEasy\extend\Application\Models\PaymentGateway::class => \Es\NetsEasy\extend\Application\Models\PaymentGateway::class,
+        \Es\NetsEasy\extend\Application\Models\Order::class => \Es\NetsEasy\extend\Application\Models\Order::class,
         \Es\NetsEasy\Core\Events::class => \Es\NetsEasy\Core\Events::class
     ),
     'blocks' => array(

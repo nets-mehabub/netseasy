@@ -1,7 +1,7 @@
 [{assign var="payment" value=$oView->getPayment()}]
 
 <!-- [{ $payment|@debug_print_var}] -->
-[{if $oView->is_embedded() && $payment->oxpayments__oxid->value == 'nets_easy'}]
+[{if $oView->isEmbedded() && $payment->oxpayments__oxid->value == 'nets_easy'}]
 
 	[{foreach from = $oxcmp_lang item = _language}]
 	[{if $_language->selected == 1}][{if $_language->abbr=='en'}][{assign var="lang" value="en-GB"}][{/if}][{/if}]
