@@ -1,5 +1,5 @@
 [{ if $edit }]
-	[{ assign var="status" value=$oView->is_easy($oxid) }]
+	[{ assign var="status" value=$oView->isEasy($oxid) }]
 	[{ assign var="deBug" value=$oView->debugMode() }]
 	[{ if $status.paymentErr }] 
 		<div class="nets-container">

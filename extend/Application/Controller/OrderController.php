@@ -32,7 +32,7 @@ class OrderController extends OrderController_parent {
     }
 
     /**
-     * Important function that returns next step in payment process, calls parent function
+     * Function that returns next step in payment process, calls parent function
      * @return string iSuccess
      */
     protected function _getNextStep($iSuccess) {
@@ -94,25 +94,24 @@ class OrderController extends OrderController_parent {
 
     /**
      * Function to get return data after hosted payment checkout is done
-     * @return amount
+     * @return null
      */
     public function returnhosted() {
-        $paymentId = \oxRegistry::getConfig()->getRequestParameter('paymentid');
-
+        //$paymentId = \oxRegistry::getConfig()->getRequestParameter('paymentid');
+        $paymentId = \oxRegistry::getSession()->getVariable('payment_id');
         if ($this->getConfig()->getConfigParam('nets_autocapture')) {
             $chargeResponse = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $paymentId, 'GET');
             $api_ret = json_decode($chargeResponse, true);
             $netsOrder = \oxNew(NetsOrder::class);
             $netsOrder->savePaymentDetails($api_ret);
         }
-
         \oxRegistry::getUtils()->redirect($this->getConfig()
                         ->getSslShopUrl() . 'index.php?cl=thankyou&paymentid=' . $paymentId);
     }
 
     /*
      * Function to get checkout js url based on environment i.e live or test
-     * return checkout js url
+     * @return checkout js url
      */
 
     public function getCheckoutJs() {
@@ -145,6 +144,7 @@ class OrderController extends OrderController_parent {
             return $netsOrder->createNetsTransaction($oOrder);
         }
     }
+
     /**
      * Function to check if it embedded checkout
      * @return bool
@@ -153,6 +153,7 @@ class OrderController extends OrderController_parent {
         $netsOrder = \oxNew(NetsOrder::class);
         return $netsOrder->isEmbedded();
     }
+
     /*
      * Function to fetch checkout key to pass in checkout js options based on environment live or test
      * @return checkout key

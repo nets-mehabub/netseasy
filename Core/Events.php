@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of OXID NETS module.
  * 
@@ -41,7 +42,8 @@ class Events {
     static $nets_payment_types_active = array();
 
     /**
-     * Execute action on activate event
+     * Function to execute action on activate event
+     * @return null
      */
     static function onActivate() {
         NetsLog::log(self::$NetsLog, "nets_eventsonActivate");
@@ -54,12 +56,10 @@ class Events {
     }
 
     /**
-     * Execute action on deactivate event
-     *
+     * Function to execute action on deactivate event
      * @return null
      */
     static function onDeactivate() {
-        //NetsLog::log(self::$NetsLog, "nets_eventsonDeactivate");
         $payment_types = NetsPaymentTypes::$nets_payment_types;
         foreach ($payment_types as $payment_type) {
             self::activatePayment($payment_type['payment_id'], 0);
@@ -67,8 +67,7 @@ class Events {
     }
 
     /**
-     * Check if nets payment is completed.
-     *
+     * Function to check if nets payment is completed.
      * @return null
      */
     private static function checkPayment($payment_id) {
@@ -87,8 +86,7 @@ class Events {
     }
 
     /**
-     * Activate nets payment.
-     *
+     * Function to activate nets payment.
      * @return null
      */
     private static function activatePayment($payment_id, $active = 1) {
@@ -105,9 +103,8 @@ class Events {
     }
 
     /**
-     * create nets payment in shop.
-     *
-     * @return null
+     * Function to create nets payment in shop.
+     * @return bool
      */
     private static function createPayment($payment_id) {
         try {
@@ -140,8 +137,7 @@ class Events {
     }
 
     /**
-     * Check nets table structure.
-     *
+     * Function to check nets table structure.
      * @return null
      */
     private static function checkTableStructure() {
@@ -183,8 +179,7 @@ class Events {
     }
 
     /**
-     * Create Nets payment table oxnets.
-     *
+     * Function to create Nets payment table oxnets.
      * @return null
      */
     private static function createTableStructure($table_name = 'oxnets') {

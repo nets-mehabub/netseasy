@@ -21,7 +21,7 @@ if (!class_exists("NetsPaymentTypes")) {
         );
 
         /**
-         * Get Nets Payment Type
+         * Function to get Nets Payment Type
          * @return bool
          */
         static function getNetsPaymentType($payment_id) {
@@ -34,7 +34,7 @@ if (!class_exists("NetsPaymentTypes")) {
         }
 
         /**
-         * Get Nets Payment Description
+         * Function to get Nets Payment Description
          * @return bool
          */
         static function getNetsPaymentDesc($payment_id) {
@@ -47,7 +47,7 @@ if (!class_exists("NetsPaymentTypes")) {
         }
 
         /**
-         * Get Nets Payment Short Description
+         * Function to get Nets Payment Short Description
          * @return bool
          */
         static function getNetsPaymentShortDesc($payment_id) {

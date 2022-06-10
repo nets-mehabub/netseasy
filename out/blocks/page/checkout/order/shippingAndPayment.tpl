@@ -45,7 +45,7 @@
 			containerId : "dibs-complete-checkout",
 			language: "[{$lang}]"
 		};
-
+                console.log(checkoutOptions);
 		var checkout = new Dibs.Checkout(checkoutOptions);
 		checkout.on('payment-completed', function(response) {
 			$("#orderConfirmAgbBottom").submit();

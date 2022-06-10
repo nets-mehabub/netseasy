@@ -14,7 +14,7 @@ class PaymentController extends PaymentController_parent {
     protected $_NetsLog = false;
 
     /**
-     * initialize the class 
+     * Function to initialize the class 
      * @return null
      */
     public function init() {
@@ -26,7 +26,7 @@ class PaymentController extends PaymentController_parent {
     }
 
     /**
-     * Get dyn value 
+     * Function to get dyn value 
      * @return string
      */
     public function getDynValue() {
@@ -34,7 +34,7 @@ class PaymentController extends PaymentController_parent {
     }
 
     /**
-     * Get Nets Payment Types from db
+     * Function to get Nets Payment Types from db
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
      */
@@ -56,7 +56,7 @@ class PaymentController extends PaymentController_parent {
     }
 
     /**
-     * Get nets payment text
+     * Function to get nets payment text
      * @return array
      */
     public function getPaymentTextConfig() {
@@ -64,7 +64,7 @@ class PaymentController extends PaymentController_parent {
     }
 
     /**
-     * Get nets payment text
+     * Function to get nets payment text
      * @return string
      */
     public function getPaymentUrlConfig() {

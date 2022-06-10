@@ -13,9 +13,7 @@ class PaymentGateway extends PaymentGateway_parent {
     protected $_NetsLog = false;
 
     /**
-     * Execute Nets payment.
-     * @param object $dAmount
-     * @param double $oOrder
+     * Function to execute Nets payment.
      * @return bool
      */
     public function executePayment($dAmount, &$oOrder) {
@@ -25,7 +23,6 @@ class PaymentGateway extends PaymentGateway_parent {
         $ox_payment_id = $this->getSession()->getBasket()->getPaymentId();
         $payment_type = netsPaymentTypes::getNetsPaymentType($ox_payment_id);
         NetsLog::log($this->_NetsLog, "NetsPaymentGateway executePayment: " . $payment_type);
-
         if (!isset($payment_type) || !$payment_type) {
             NetsLog::log($this->_NetsLog, "NetsPaymentGateway executePayment, parent");
             return parent::executePayment($dAmount, $oOrder);
@@ -33,7 +30,6 @@ class PaymentGateway extends PaymentGateway_parent {
         NetsLog::log($this->_NetsLog, "NetsPaymentGateway executePayment");
         $success = true;
         $this->getSession()->deleteVariable('nets_success');
-
         if (isset($success) && $success === true) {
             NetsLog::log($this->_NetsLog, "NetsPaymentGateway executePayment - success");
             return true;

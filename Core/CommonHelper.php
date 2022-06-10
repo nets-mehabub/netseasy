@@ -6,7 +6,7 @@ use Es\NetsEasy\Api\NetsLog;
 use Es\NetsEasy\Api\NetsPaymentTypes;
 
 /**
- * Nets Order common helper class
+ * Class defines Nets order common helper functions
  */
 class CommonHelper {
 
@@ -31,19 +31,19 @@ class CommonHelper {
      * @return array
      */
 
-    public function getHeaders($commercetag = false) {
+    public static function getHeaders($commercetag = false) {
         if ($commercetag) {
             return [
                 "Content-Type: " . self::RESPONSE_TYPE,
                 "Accept: " . self::RESPONSE_TYPE,
-                "Authorization: " . $this->getSecretKey(),
+                "Authorization: " . self::getSecretKey(),
                 "commercePlatformTag: " . "Oxid6"
             ];
         } else {
             return [
                 "Content-Type: " . self::RESPONSE_TYPE,
                 "Accept: " . self::RESPONSE_TYPE,
-                "Authorization: " . $this->getSecretKey()
+                "Authorization: " . self::getSecretKey()
             ];
         }
     }
@@ -53,7 +53,7 @@ class CommonHelper {
      * @return secret key
      */
 
-    public function getSecretKey() {
+    public static function getSecretKey() {
         if (\oxRegistry::getConfig()->getConfigParam('nets_blMode') == 0) {
             return \oxRegistry::getConfig()->getConfigParam('nets_secret_key_test');
         } else {
@@ -66,7 +66,7 @@ class CommonHelper {
      * @return payment id
      */
 
-    public function getPaymentId($oxoder_id) {
+    public static function getPaymentId($oxoder_id) {
         $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
         $sSQL_select = "SELECT transaction_id FROM oxnets WHERE oxorder_id = ? LIMIT 1";
         $payment_id = $oDB->getOne($sSQL_select, [
@@ -80,7 +80,7 @@ class CommonHelper {
      * return payment api url
      */
 
-    public function getApiUrl() {
+    public static function getApiUrl() {
         if (\oxRegistry::getConfig()->getConfigParam('nets_blMode') == 0) {
             return self::ENDPOINT_TEST;
         } else {
@@ -94,7 +94,7 @@ class CommonHelper {
      * @return charge api url
      */
 
-    public function getChargePaymentUrl(string $paymentId) {
+    public static function getChargePaymentUrl(string $paymentId) {
         return (\oxRegistry::getConfig()->getConfigParam('nets_blMode') == 1) ? self::ENDPOINT_LIVE . $paymentId . '/charges' : self::ENDPOINT_TEST . $paymentId . '/charges';
     }
 
@@ -104,7 +104,7 @@ class CommonHelper {
      * @return cancel api url
      */
 
-    public function getVoidPaymentUrl(string $paymentId) {
+    public static function getVoidPaymentUrl(string $paymentId) {
         return (\oxRegistry::getConfig()->getConfigParam('nets_blMode') == 1) ? self::ENDPOINT_LIVE . $paymentId . '/cancels' : self::ENDPOINT_TEST . $paymentId . '/cancels';
     }
 
@@ -114,7 +114,7 @@ class CommonHelper {
      * @return refund api url
      */
 
-    public function getRefundPaymentUrl($chargeId) {
+    public static function getRefundPaymentUrl($chargeId) {
         return (\oxRegistry::getConfig()->getConfigParam('nets_blMode') == 1) ? self::ENDPOINT_LIVE_CHARGES . $chargeId . '/refunds' : self::ENDPOINT_TEST_CHARGES . $chargeId . '/refunds';
     }
 
@@ -123,7 +123,7 @@ class CommonHelper {
      * @return layout style
      */
 
-    public function getLayout() {
+    public static function getLayout() {
         return \oxRegistry::getConfig()->getActiveView()
                         ->getViewConfig()
                         ->getModuleUrl("esnetseasy", "out/src/js/") . \oxRegistry::getConfig()->getConfigParam('nets_layout_mode') . '.js';
@@ -134,24 +134,20 @@ class CommonHelper {
      * @return layout style
      */
 
-    public function getCurlResponse($url, $method = "POST", $bodyParams = NULL) {
+    public static function getCurlResponse($url, $method = "POST", $bodyParams = NULL) {
         $result = '';
-
         // initiating curl request to call api's
         $oCurl = curl_init();
         curl_setopt($oCurl, CURLOPT_URL, $url);
         curl_setopt($oCurl, CURLOPT_CUSTOMREQUEST, $method);
         curl_setopt($oCurl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($oCurl, CURLOPT_HTTPHEADER, $this->getHeaders());
+        curl_setopt($oCurl, CURLOPT_HTTPHEADER, self::getHeaders());
         if ($method == "POST" || $method == "PUT") {
             curl_setopt($oCurl, CURLOPT_POSTFIELDS, $bodyParams);
         }
-        NetsLog::log($this->_NetsLog, "netsOrder Curl request headers," . json_encode($this->getHeaders()));
-
+        NetsLog::log(true, "netsOrder Curl request headers," . json_encode(self::getHeaders()));
         $result = curl_exec($oCurl);
-
         $info = curl_getinfo($oCurl);
-
         switch ($info['http_code']) {
             case 401:
                 $error_message = 'NETS Easy authorization filed. Check your secret/checkout keys';
@@ -164,7 +160,7 @@ class CommonHelper {
                 break;
         }
         if (!empty($error_message)) {
-            NetsLog::log($this->_NetsLog, "netsOrder Curl request error, $error_message");
+            NetsLog::log(true, "netsOrder Curl request error, $error_message");
         }
         curl_close($oCurl);
 
@@ -176,7 +172,7 @@ class CommonHelper {
      * @return checkout key
      */
 
-    public function getCheckoutKey() {
+    public static function getCheckoutKey() {
         if (\oxRegistry::getConfig()->getConfigParam('nets_blMode') == 0) {
             return \oxRegistry::getConfig()->getConfigParam('nets_checkout_key_test');
         } else {
@@ -189,7 +185,7 @@ class CommonHelper {
      * return update reference api url
      */
 
-    public function getUpdateRefUrl($paymentId) {
+    public static function getUpdateRefUrl($paymentId) {
         if (\oxRegistry::getConfig()->getConfigParam('nets_blMode') == 0) {
             return self::ENDPOINT_TEST . $paymentId . '/referenceinformation';
         } else {

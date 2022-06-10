@@ -8,16 +8,15 @@ namespace Es\NetsEasy\Api;
 if (!class_exists("NetsLog")) {
 
     class NetsLog {
+
         /**
-         * save log details in nets file 
+         * Function to save log details in nets file 
          * @return null
          */
         static function log($log) {
-
             if (!$log) {
                 return;
             }
-
             $date = date("r");
             $logfile = getShopBasePath() . "log/nets.log";
             $x = 0;
@@ -27,16 +26,15 @@ if (!class_exists("NetsLog")) {
                     continue;
                 }
                 if (is_string($val) || is_numeric($val)) {
-                    // file_put_contents(self::$logfile, "[$date] $val\n", FILE_APPEND);
                     file_put_contents($logfile, "[$date] $val\n", FILE_APPEND);
                 } else {
-                    // file_put_contents(self::$logfile, "[$date] ".print_r($val,true)."\n", FILE_APPEND);
                     file_put_contents($logfile, "[$date] " . print_r($val, true) . "\n", FILE_APPEND);
                 }
             }
         }
+
         /**
-         * validate utf8 string 
+         * Function validate utf8 string 
          * @return bool
          */
         static function seems_utf8($Str) {
@@ -55,7 +53,6 @@ if (!class_exists("NetsLog")) {
                     $n = 5;# 1111110b
                 else
                     return false; // Does not match any model
-
                 for ($j = 0; $j < $n; $j ++) {
                     // n bytes matching 10bbbbbb follow ?
                     if (( ++$i == strlen($Str)) || ((ord($Str[$i]) & 0xC0) != 0x80)) {
@@ -67,7 +64,7 @@ if (!class_exists("NetsLog")) {
         }
 
         /**
-         * check utf8 string 
+         * Function to check utf8 string 
          * @return $data array
          */
         static function utf8_ensure($data) {
@@ -90,13 +87,7 @@ if (!class_exists("NetsLog")) {
         }
 
         /**
-         * Create transaction id in db
-         * @param     $req_data
-         * @param     $hash
-         * @param     $payment_method
-         * @param     $oxorder_id
-         * @param     $amount
-         * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+         * Function to create transaction id in db
          * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
          */
         static function createTransactionEntry($req_data, $ret_data, $hash, $payment_id, $oxorder_id, $amount) {
@@ -113,11 +104,7 @@ if (!class_exists("NetsLog")) {
         }
 
         /**
-         * Set transaction id in db
-         * @param $hash
-         * @param $transaction_id
-         * @param bool $log_error
-         * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
+         * Function to set transaction id in db
          * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
          */
         static function setTransactionId($hash, $transaction_id, $log_error = false) {
