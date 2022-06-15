@@ -18,8 +18,9 @@
 * See our user guide with illustrations in /nets/docs/Oxid_guide_Nets.pdf
 
 ### Download / Installation
-* Method 1
-1. Unzip and upload the plugin folder nets manually to root /source/modules.
+
+1. Just go to the directory of your Oxid composer.json file and perform the following command:
+   composer require payone-gmbh/oxid-6
 2. Clear your cache by 3.rd party plugin or simply delete all files in the folder root /source/tmp.
    IMPORTANT : do not delete the .htaccess file or the smarty folder but only its content.
 3. Connect with a SSH client and navigate to root directory of your Oxid 6 installation and run command :

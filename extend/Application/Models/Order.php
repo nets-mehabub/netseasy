@@ -20,7 +20,9 @@ class Order {
     const JS_ENDPOINT_LIVE = "https://checkout.dibspayment.eu/v1/checkout.js";
     const RESPONSE_TYPE = "application/json";
     const MODULE_NAME = "nets_easy";
+
     protected $integrationType;
+
     /**
      * Function to create transaction and call nets payment Api
      * @param $oOrder
@@ -60,9 +62,8 @@ class Order {
         $this->getDiscountItem($wrapCost, $greetCardAmt);
         $sumAmt = 0;
         foreach ($basketcontents as $item) {
-            $responseArray = $this->getProductItem($item);
-            $items = $responseArray['itemsArr'];
-            $sumAmt = $responseArray['sumOfAmount'];
+            $items[] = $itemArray = $this->getProductItem($item);
+            $sumAmt += $itemArray['grossTotalAmount'];
         }
         $sumAmt = $sumAmt + $wrapCost + $greetCardAmt + $shipCostAmt + $payCostAmt;
         $daten['delivery_address'] = $this->getDeliveryAddress($oOrder, $oDB, $oUser);
@@ -128,7 +129,7 @@ class Order {
         $unitPrice = round(round(($prodPrice * 100) / $taxFormat, 2) * 100);
         $netAmount = round($quantity * $unitPrice);
         $grossAmount = round($quantity * ($prodPrice * 100));
-        $items[] = [
+        return [
             'reference' => $item->getArticle()->oxarticles__oxartnum->value,
             'name' => $item->getArticle()->oxarticles__oxtitle->value,
             'quantity' => $quantity,
@@ -139,8 +140,7 @@ class Order {
             'grossTotalAmount' => $grossAmount,
             'netTotalAmount' => $netAmount
         ];
-        $sumAmt += $grossAmount;
-        return array('itemsArr' => $items, 'sumOfAmount' => $sumAmt);
+        //$sumAmt += $grossAmount;
     }
 
     /**
@@ -190,7 +190,7 @@ class Order {
         NetsLog::log($this->_NetsLog, "NetsOrder, api request data here 2 : ", json_encode($data));
         $api_return = CommonHelper::getCurlResponse($apiUrl, 'POST', json_encode($data));
         $response = json_decode($api_return, true);
-        
+
         NetsLog::log($this->_NetsLog, "NetsOrder, api return data create trans: ", json_decode($api_return, true));
         // create entry in oxnets table for transaction
         NetsLog::createTransactionEntry(json_encode($data), $api_return, $this->getOrderId(), $response['paymentId'], $oID, intval(strval($oBasket->getPrice()->getBruttoPrice() * 100)));
@@ -226,12 +226,12 @@ class Order {
         if ($language == 'es') {
             $lang = 'es-ES';
         }
-        if(isset($response['paymentId'])) {
+        if (isset($response['paymentId'])) {
             \oxRegistry::getSession()->setVariable('payment_id', $response['paymentId']);
         }
         if ($this->integrationType == self::HOSTED) {
             \oxRegistry::getUtils()->redirect($response["hostedPaymentPageUrl"] . "&language=$lang");
-        } 
+        }
         return $response['paymentId'];
     }
 
@@ -240,7 +240,7 @@ class Order {
      * @return array
      */
     public function prepareDatastringParams($daten, $data) {
-        $delivery_address = $daten['delivery_address'];        
+        $delivery_address = $daten['delivery_address'];
         if (\oxRegistry::getConfig()->getConfigParam('nets_checkout_mode') == 'embedded') {
             $this->integrationType = self::EMBEDDED;
         }
