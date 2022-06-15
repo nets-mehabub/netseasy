@@ -20,16 +20,16 @@
 ### Download / Installation
 
 1. Connect with a SSH client and navigate to root directory of your Oxid 6 installation and run command :
-    composer require nets-mehabub/ox6_metadata
-    vendor/bin/oe-eshop-db_migrate migrations:migrate es
+   - composer require nets-mehabub/ox6_metadata
+   - vendor/bin/oe-eshop-db_migrate migrations:migrate es
 
 2. Clear your cache by third party plugins or simply delete all files from the folder root folder /source/tmp.
-    IMPORTANT : do not delete the .htaccess file or the smarty folder but only its content.
+   - IMPORTANT : do not delete the .htaccess file or the smarty folder but only its content.
 
 3. Connect with a SSH client and navigate to root directory of your Oxid 6 installation and run command :
-    vendor/bin/oe-console oe:module:install .\source\modules\es\esnetseasy
-    vendor/bin/oe-console oe:module:install-configuration .\source\modules\es\netseasy
-    vendor/bin/oe-console oe:module:apply-configuration  
+   - vendor/bin/oe-console oe:module:install .\source\modules\es\esnetseasy
+   - vendor/bin/oe-console oe:module:install-configuration .\source\modules\es\netseasy
+   - vendor/bin/oe-console oe:module:apply-configuration  
 
 ### Configuration
 1. To configure and setup the plugin navigate to : Admin > Extensions > Modules
