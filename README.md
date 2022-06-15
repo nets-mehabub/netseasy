@@ -19,11 +19,13 @@
 
 ### Download / Installation
 
-1. Just go to the directory of your Oxid composer.json file and perform the following command:
+1. Connect with a SSH client and navigate to root directory of your Oxid 6 installation and run command :
     composer require nets-mehabub/ox6_metadata
     vendor/bin/oe-eshop-db_migrate migrations:migrate es
-2. Clear your cache by 3.rd party plugin or simply delete all files in the folder root /source/tmp.
+
+2. Clear your cache by third party plugins or simply delete all files from the folder root folder /source/tmp.
     IMPORTANT : do not delete the .htaccess file or the smarty folder but only its content.
+
 3. Connect with a SSH client and navigate to root directory of your Oxid 6 installation and run command :
     vendor/bin/oe-console oe:module:install .\source\modules\es\esnetseasy
     vendor/bin/oe-console oe:module:install-configuration .\source\modules\es\netseasy
