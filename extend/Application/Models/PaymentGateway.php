@@ -8,7 +8,7 @@ use Es\NetsEasy\Api\NetsLog;
 /**
  * Class defines execution of nets payment.
  */
-class PaymentGateway extends PaymentGateway_parent {
+class PaymentGateway  {
 
     protected $_NetsLog = false;
 

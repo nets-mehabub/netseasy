@@ -9,13 +9,15 @@ use Es\NetsEasy\Core\CommonHelper;
 /**
  * Class defines Nets payment operations in order view
  */
-class OrderOverview {
+class OrderOverview
+{
 
     /**
      * Function to check the nets payment status and display in admin order list backend page
      * @return Payment Status
      */
-    public function getEasyStatus($oxoder_id) {
+    public function getEasyStatus($oxoder_id)
+    {
         $payment_id = CommonHelper::getPaymentId($oxoder_id);
         if (empty($payment_id)) {
             $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
@@ -64,7 +66,7 @@ class OrderOverview {
         } catch (Exception $e) {
             return $e->getMessage();
         }
-        $allStatus = $this->getPaymentStatus($response);
+        $allStatus = $this->getPaymentStatus($response, $oxoder_id);
         $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
         $oDb->execute("UPDATE oxnets SET payment_status = ? WHERE transaction_id = ? ", [
             $allStatus['dbPayStatus'],
@@ -77,15 +79,16 @@ class OrderOverview {
      * Function to get payment status
      * @return array
      */
-    public function getPaymentStatus($response) {
+    public function getPaymentStatus($response, $oxoder_id)
+    {
         $dbPayStatus = '';
         $paymentStatus = '';
         $pending = '';
-        $cancelled = $response['payment']['summary']['cancelledAmount'];
-        $reserved = $response['payment']['summary']['reservedAmount'];
-        $charged = $response['payment']['summary']['chargedAmount'];
-        $refunded = $response['payment']['summary']['refundedAmount'];
-        if ($response['payment']['refunds'] != NULL) {
+        $cancelled = isset($response['payment']['summary']['cancelledAmount']) ? $response['payment']['summary']['cancelledAmount'] : '0';
+        $reserved = isset($response['payment']['summary']['reservedAmount']) ? $response['payment']['summary']['reservedAmount'] : '0';
+        $charged = isset($response['payment']['summary']['chargedAmount']) ? $response['payment']['summary']['chargedAmount'] : '0';
+        $refunded = isset($response['payment']['summary']['refundedAmount']) ? $response['payment']['summary']['refundedAmount'] : '0';
+        if (isset($response['payment']['refunds'])) {
             if (in_array("Pending", array_column($response['payment']['refunds'], 'state'))) {
                 $pending = "Pending";
             }
@@ -147,7 +150,8 @@ class OrderOverview {
      * Function to capture nets transaction - calls Charge API
      * @return array
      */
-    public function getOrderCharged() {
+    public function getOrderCharged()
+    {
         $oxorder = \oxRegistry::getConfig()->getRequestParameter('oxorderid');
         $orderno = \oxRegistry::getConfig()->getRequestParameter('orderno');
         $data = $this->getOrderItems($oxorder);
@@ -205,7 +209,8 @@ class OrderOverview {
      * return int
      */
 
-    public function getValueItem($value, $chargeQty) {
+    public function getValueItem($value, $chargeQty)
+    {
         $value['quantity'] = $chargeQty;
         $prodPrice = $value['oxbprice']; // product price incl. VAT in DB format
         $tax = (int) $value['taxRate'] / 100; // Tax rate in DB format
@@ -225,7 +230,8 @@ class OrderOverview {
      * redirects to admin overview listing page
      */
 
-    public function getOrderRefund() {
+    public function getOrderRefund()
+    {
         $oxorder = \oxRegistry::getConfig()->getRequestParameter('oxorderid');
         $orderno = \oxRegistry::getConfig()->getRequestParameter('orderno');
         $data = $this->getOrderItems($oxorder);
@@ -301,7 +307,8 @@ class OrderOverview {
      * @return array order items and amount
      */
 
-    public function getOrderItems($oxorder, $blExcludeCanceled = true) {
+    public function getOrderItems($oxorder, $blExcludeCanceled = true)
+    {
         $sSelect = "
 			SELECT `oxorderarticles`.* FROM `oxorderarticles`
 			WHERE `oxorderarticles`.`oxorderid` = '" . $oxorder . "'" . ($blExcludeCanceled ? "
@@ -358,7 +365,8 @@ class OrderOverview {
      * @return array
      */
 
-    public function getItemList($listitem) {
+    public function getItemList($listitem)
+    {
         return [
             'reference' => $listitem->oxorderarticles__oxartnum->value,
             'name' => $listitem->oxorderarticles__oxtitle->value,
@@ -378,7 +386,8 @@ class OrderOverview {
      * @return array
      */
 
-    public function getShoppingCost($item) {
+    public function getShoppingCost($item)
+    {
         return [
             'reference' => 'shipping',
             'name' => 'shipping',
@@ -398,7 +407,8 @@ class OrderOverview {
      * @return array
      */
 
-    public function getGreetingCardItem($item) {
+    public function getGreetingCardItem($item)
+    {
         return [
             'reference' => 'Greeting Card',
             'name' => 'Greeting Card',
@@ -418,7 +428,8 @@ class OrderOverview {
      * @return array
      */
 
-    public function getGiftWrappingItem($item) {
+    public function getGiftWrappingItem($item)
+    {
         return [
             'reference' => 'Gift Wrapping',
             'name' => 'Gift Wrapping',
@@ -438,7 +449,8 @@ class OrderOverview {
      * @return array
      */
 
-    public function getPayCost($item) {
+    public function getPayCost($item)
+    {
         return [
             'reference' => 'payment costs',
             'name' => 'payment costs',
@@ -459,7 +471,8 @@ class OrderOverview {
      * @return payment method
      */
 
-    public function getPaymentMethod($oxoder_id) {
+    public function getPaymentMethod($oxoder_id)
+    {
         $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
         $sSQL_select = "SELECT OXPAYMENTTYPE FROM oxorder WHERE oxid = ? LIMIT 1";
         $payMethod = $oDB->getOne($sSQL_select, [
@@ -474,7 +487,8 @@ class OrderOverview {
      * @return nets charge id
      */
 
-    private function getChargeId($oxoder_id) {
+    public function getChargeId($oxoder_id)
+    {
         // Get charge id from nets payments api
         $api_return = CommonHelper::getCurlResponse(CommonHelper::getApiUrl() . CommonHelper::getPaymentId($oxoder_id), 'GET');
         $response = json_decode($api_return, true);
@@ -501,7 +515,8 @@ class OrderOverview {
      * @return array
      */
 
-    public function getItemForRefund($ref, $refundQty, $data) {
+    public function getItemForRefund($ref, $refundQty, $data)
+    {
         $totalAmount = 0;
         foreach ($data['items'] as $key => $value) {
             if ($ref === $value['reference']) {
@@ -532,7 +547,8 @@ class OrderOverview {
      * @return int
      */
 
-    private function prepareAmount($amount = 0) {
+    private function prepareAmount($amount = 0)
+    {
         return (int) round($amount * 100);
     }
 

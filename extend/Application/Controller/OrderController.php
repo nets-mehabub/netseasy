@@ -11,7 +11,8 @@ use Es\NetsEasy\Core\CommonHelper;
  * Class controls nets payment process
  * It also shows the nets embedded checkout window
  */
-class OrderController extends OrderController_parent {
+class OrderController extends OrderController_parent
+{
 
     const ENDPOINT_TEST = 'https://test.api.dibspayment.eu/v1/payments/';
     const ENDPOINT_LIVE = 'https://api.dibspayment.eu/v1/payments/';
@@ -25,7 +26,8 @@ class OrderController extends OrderController_parent {
     /**
      * Constructor
      */
-    public function __construct() {
+    public function __construct()
+    {
         $this->_NetsLog = $this->getConfig()->getConfigParam('nets_blDebug_log');
         NetsLog::log($this->_NetsLog, "NetsOrderController, constructor");
         $this->oCommonHelper = \oxNew(CommonHelper::class);
@@ -35,7 +37,8 @@ class OrderController extends OrderController_parent {
      * Function that returns next step in payment process, calls parent function
      * @return string iSuccess
      */
-    protected function _getNextStep($iSuccess) {
+    protected function _getNextStep($iSuccess)
+    {
         NetsLog::log($this->_NetsLog, "NetsOrderController, _getNextStep");
         $nextStep = parent::_getNextStep($iSuccess);
         return $nextStep;
@@ -45,7 +48,8 @@ class OrderController extends OrderController_parent {
      * Function that executes the payment
      * @return null
      */
-    public function execute() {
+    public function execute()
+    {
         NetsLog::log($this->_NetsLog, "NetsOrderController, execute");
         $oBasket = $this->getSession()->getBasket();
         $oUser = $this->getUser();
@@ -78,7 +82,8 @@ class OrderController extends OrderController_parent {
      * Function to get error message displayed on template file
      * @return string
      */
-    public function getErrorMsg() {
+    public function getErrorMsg()
+    {
         return $this->getSession()->getVariable('nets_err_msg');
     }
 
@@ -86,7 +91,8 @@ class OrderController extends OrderController_parent {
      * Function to get basket amount
      * @return amount
      */
-    protected function getBasketAmount() {
+    protected function getBasketAmount()
+    {
         $mySession = $this->getSession();
         $oBasket = $mySession->getBasket();
         return intval(strval(($oBasket->getPrice()->getBruttoPrice() * 100)));
@@ -96,7 +102,8 @@ class OrderController extends OrderController_parent {
      * Function to get return data after hosted payment checkout is done
      * @return null
      */
-    public function returnhosted() {
+    public function returnhosted()
+    {
         //$paymentId = \oxRegistry::getConfig()->getRequestParameter('paymentid');
         $paymentId = \oxRegistry::getSession()->getVariable('payment_id');
         if ($this->getConfig()->getConfigParam('nets_autocapture')) {
@@ -114,12 +121,12 @@ class OrderController extends OrderController_parent {
      * @return checkout js url
      */
 
-    public function getCheckoutJs() {
+    public function getCheckoutJs()
+    {
         if ($this->getConfig()->getConfigParam('nets_blMode') == 0) {
             return self::JS_ENDPOINT_TEST;
-        } else {
-            return self::JS_ENDPOINT_LIVE;
         }
+        return self::JS_ENDPOINT_LIVE;
     }
 
     /*
@@ -127,7 +134,8 @@ class OrderController extends OrderController_parent {
      * @return payment id
      */
 
-    public function getPaymentApiResponse() {
+    public function getPaymentApiResponse()
+    {
         // additional user check
         $oUser = $this->getUser();
         if (!$oUser) {
@@ -149,7 +157,8 @@ class OrderController extends OrderController_parent {
      * Function to check if it embedded checkout
      * @return bool
      */
-    public function isEmbedded() {
+    public function isEmbedded()
+    {
         $netsOrder = \oxNew(NetsOrder::class);
         return $netsOrder->isEmbedded();
     }
@@ -159,7 +168,8 @@ class OrderController extends OrderController_parent {
      * @return checkout key
      */
 
-    public function getCheckoutKey() {
+    public function getCheckoutKey()
+    {
         return $this->oCommonHelper->getCheckoutKey();
     }
 
@@ -168,7 +178,8 @@ class OrderController extends OrderController_parent {
      * @return layout style
      */
 
-    public function getLayout() {
+    public function getLayout()
+    {
         return $this->oCommonHelper->getLayout();
     }
 

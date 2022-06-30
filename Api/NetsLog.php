@@ -31,6 +31,7 @@ if (!class_exists("NetsLog")) {
                     file_put_contents($logfile, "[$date] " . print_r($val, true) . "\n", FILE_APPEND);
                 }
             }
+            return true;
         }
 
         /**
