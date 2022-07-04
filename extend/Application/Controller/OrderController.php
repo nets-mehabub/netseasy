@@ -34,8 +34,6 @@ class OrderController extends OrderController_parent
     {
         $this->_NetsLog = \oxRegistry::getConfig()->getConfigParam('nets_blDebug_log');
         NetsLog::log($this->_NetsLog, "NetsOrderController, constructor");
-
-
         if (!$commonHelper) {
             $this->oCommonHelper = \oxNew(CommonHelper::class);
         } else {
@@ -112,12 +110,11 @@ class OrderController extends OrderController_parent
      */
     public function returnhosted()
     {
-        //$paymentId = \oxRegistry::getConfig()->getRequestParameter('paymentid');
         $paymentId = \oxRegistry::getSession()->getVariable('payment_id');
         if (\oxRegistry::getConfig()->getConfigParam('nets_autocapture')) {
             $chargeResponse = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $paymentId, 'GET');
             $api_ret = json_decode($chargeResponse, true);
-            $this->oNetsOrder->savePaymentDetails($api_ret,$paymentId);
+            $this->oNetsOrder->savePaymentDetails($api_ret, $paymentId);
         }
         return $this->oxUtils->redirect($this->getConfig()
                                 ->getSslShopUrl() . 'index.php?cl=thankyou&paymentid=' . $paymentId);
@@ -170,7 +167,6 @@ class OrderController extends OrderController_parent
      */
     public function isEmbedded()
     {
-
         return $this->oNetsOrder->isEmbedded();
     }
 

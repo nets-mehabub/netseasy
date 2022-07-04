@@ -20,16 +20,6 @@ class ThankyouControllerTest extends \Codeception\Test\Unit
         $this->oThankyouController = \oxNew(NetsThankYouController::class);
     }
 
-    protected function _before()
-    {
-        
-    }
-
-    protected function _after()
-    {
-        
-    }
-
     /**
      * Test case to get payment id from database to display in thank you page.
      */

@@ -15,7 +15,8 @@ class OrderOverview
     protected $oCommonHelper;
     protected $oOrderOverview;
     protected $_NetsLog;
-    public function __construct($oOrderOverview = null,$commonHelper = null)
+
+    public function __construct($oOrderOverview = null, $commonHelper = null)
     {
         $this->_NetsLog = true;
         if (!$oOrderOverview) {
@@ -30,6 +31,7 @@ class OrderOverview
             $this->oCommonHelper = $commonHelper;
         }
     }
+
     /**
      * Function to check the nets payment status and display in admin order list backend page
      * @return Payment Status
@@ -113,8 +115,8 @@ class OrderOverview
         }
         $partialc = $reserved - $charged;
         $partialr = $reserved - $refunded;
-        $chargeid = isset($response['payment']['charges'][0]['chargeId'])?$response['payment']['charges'][0]['chargeId']:'';
-        $chargedate = isset($response['payment']['charges'][0]['created'])?$response['payment']['charges'][0]['created']:date('Y-m-d');
+        $chargeid = isset($response['payment']['charges'][0]['chargeId']) ? $response['payment']['charges'][0]['chargeId'] : '';
+        $chargedate = isset($response['payment']['charges'][0]['created']) ? $response['payment']['charges'][0]['created'] : date('Y-m-d');
         if ($reserved) {
             if ($cancelled) {
                 $langStatus = "cancel";
@@ -266,7 +268,7 @@ class OrderOverview
         $refundEachQtyArr = array();
         $breakloop = false;
         $cnt = 1;
-        
+
         foreach ($chargeResponse['response']['payment']['charges'] as $ky => $val) {
             if (empty($ref)) {
                 $body = [

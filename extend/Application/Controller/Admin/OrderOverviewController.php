@@ -24,16 +24,17 @@ class OrderOverviewController extends OrderOverviewController_parent
     protected $oCommonHelper = false;
     protected $oxUtils;
     protected $oOrderOverviewController;
+
     public function __construct($oOrderOverviewController = null, $oOrderOverview = null, $commonHelper = null, $oxUtils = null)
     {
         $this->_NetsLog = $this->getConfig()->getConfigParam('nets_blDebug_log');
         NetsLog::log($this->_NetsLog, "NetsOrderOverview, constructor");
-        
+
         if (!$oOrderOverviewController) {
             $this->oOrderOverviewController = $this;
-        }else {
+        } else {
             $this->oOrderOverviewController = $oOrderOverviewController;
-        } 
+        }
         if (!$oOrderOverview) {
             $this->oOrderOverview = \oxNew(OrderOverview::class);
         } else {
@@ -89,7 +90,7 @@ class OrderOverviewController extends OrderOverviewController_parent
         $admin_sid = \oxRegistry::getConfig()->getRequestParameter('force_admin_sid');
         $this->oOrderOverview->getOrderCharged();
         return $this->oxUtils->redirect($this->getConfig()
-                        ->getSslShopUrl() . 'admin/index.php?cl=admin_order&force_admin_sid' . $admin_sid . '&stoken=' . $stoken);
+                                ->getSslShopUrl() . 'admin/index.php?cl=admin_order&force_admin_sid' . $admin_sid . '&stoken=' . $stoken);
     }
 
     /*
@@ -103,7 +104,7 @@ class OrderOverviewController extends OrderOverviewController_parent
         $admin_sid = \oxRegistry::getConfig()->getRequestParameter('force_admin_sid');
         $this->oOrderOverview->getOrderRefund();
         return $this->oxUtils->redirect($this->getConfig()
-                        ->getSslShopUrl() . 'admin/index.php?cl=admin_order&force_admin_sid' . $admin_sid . '&stoken=' . $stoken);
+                                ->getSslShopUrl() . 'admin/index.php?cl=admin_order&force_admin_sid' . $admin_sid . '&stoken=' . $stoken);
     }
 
     /*
@@ -128,7 +129,7 @@ class OrderOverviewController extends OrderOverviewController_parent
         $api_return = $this->oCommonHelper->getCurlResponse($cancelUrl, 'POST', json_encode($body));
         $response = json_decode($api_return, true);
         return $this->oxUtils->redirect($this->getConfig()
-                        ->getSslShopUrl() . 'admin/index.php?cl=admin_order&force_admin_sid' . $admin_sid . '&stoken=' . $stoken);
+                                ->getSslShopUrl() . 'admin/index.php?cl=admin_order&force_admin_sid' . $admin_sid . '&stoken=' . $stoken);
     }
 
     /*
@@ -164,9 +165,9 @@ class OrderOverviewController extends OrderOverviewController_parent
         }
         $api_return = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $this->oCommonHelper->getPaymentId($oxid), 'GET');
         $response = json_decode($api_return, true);
-         
+
         if (!empty($response['payment']['charges'])) {
-            $chargedItems = $this->oOrderOverviewController->getChargedItems($response); 
+            $chargedItems = $this->oOrderOverviewController->getChargedItems($response);
         }
         if (!empty($response['payment']['refunds'])) {
             $refundedItems = $this->oOrderOverviewController->getRefundedItems($response);
@@ -263,7 +264,7 @@ class OrderOverviewController extends OrderOverviewController_parent
 
     public function getResponse($oxoder_id)
     {
-        $api_return = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() .$this->oCommonHelper->getPaymentId($oxoder_id), 'GET');
+        $api_return = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $this->oCommonHelper->getPaymentId($oxoder_id), 'GET');
         $response = json_decode($api_return, true);
         $result = json_encode($response, JSON_PRETTY_PRINT);
         return $result;

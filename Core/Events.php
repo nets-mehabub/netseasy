@@ -13,7 +13,8 @@ use Es\NetsEasy\Api\NetsPaymentTypes;
 /**
  * Class defines what module does on Shop events.
  */
-class Events {
+class Events
+{
 
     static $NetsLog = true;
     static $nets_table_names = Array(
@@ -45,7 +46,8 @@ class Events {
      * Function to execute action on activate event
      * @return null
      */
-    static function onActivate() {
+    static function onActivate()
+    {
         NetsLog::log(self::$NetsLog, "nets_eventsonActivate");
         $payment_types = NetsPaymentTypes::$nets_payment_types;
         foreach ($payment_types as $payment_type) {
@@ -59,7 +61,8 @@ class Events {
      * Function to execute action on deactivate event
      * @return null
      */
-    static function onDeactivate() {
+    static function onDeactivate()
+    {
         $payment_types = NetsPaymentTypes::$nets_payment_types;
         foreach ($payment_types as $payment_type) {
             self::activatePayment($payment_type['payment_id'], 0);
@@ -70,7 +73,8 @@ class Events {
      * Function to check if nets payment is completed.
      * @return null
      */
-    private static function checkPayment($payment_id) {
+    private static function checkPayment($payment_id)
+    {
         try {
             $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
             $payment_id_exists = $oDB->getOne("SELECT oxid FROM oxpayments WHERE oxid = ?", [
@@ -89,7 +93,8 @@ class Events {
      * Function to activate nets payment.
      * @return null
      */
-    private static function activatePayment($payment_id, $active = 1) {
+    private static function activatePayment($payment_id, $active = 1)
+    {
         try {
             $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
             $oDB->execute("UPDATE oxpayments SET oxactive = ? WHERE oxid = ?", [
@@ -106,7 +111,8 @@ class Events {
      * Function to create nets payment in shop.
      * @return bool
      */
-    private static function createPayment($payment_id) {
+    private static function createPayment($payment_id)
+    {
         try {
             $desc = NetsPaymentTypes::getNetsPaymentDesc($payment_id);
             if (isset($desc) && $desc) {
@@ -140,7 +146,8 @@ class Events {
      * Function to check nets table structure.
      * @return null
      */
-    private static function checkTableStructure() {
+    public static function checkTableStructure()
+    {
         try {
             $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
             foreach (self::$nets_table_names as $table_name) {
@@ -182,14 +189,15 @@ class Events {
      * Function to create Nets payment table oxnets.
      * @return null
      */
-    private static function createTableStructure($table_name = 'oxnets') {
+    public static function createTableStructure($table_name = 'oxnets')
+    {
         try {
             $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
             switch ($table_name) {
                 case 'oxnets':
                     // table oxnets
                     $sSql = "
-					CREATE TABLE `oxnets` (
+					CREATE TABLE IF NOT EXISTS `oxnets` (
 						`oxnets_id` int(10) unsigned NOT NULL auto_increment,
 						`req_data` text collate latin1_general_ci,
 						`ret_data` text collate latin1_general_ci,

@@ -8,6 +8,7 @@ use Es\NetsEasy\Api\NetsLog;
 use Es\NetsEasy\Core\CommonHelper;
 use Es\NetsEasy\Tests\Unit\Controller\Admin\OrderOverviewControllerTest;
 use OxidEsales\Eshop\Core\Field;
+
 class OrderOverviewTest extends \Codeception\Test\Unit
 {
 
@@ -23,16 +24,6 @@ class OrderOverviewTest extends \Codeception\Test\Unit
         include_once dirname(__FILE__) . "/../../../../../../bootstrap.php";
         $this->oOrderOverviewObject = \oxNew(OrderOverview::class);
         $this->oOrderOverviewControllerTest = \oxNew(OrderOverviewControllerTest::class);
-    }
-
-    protected function _before()
-    {
-        
-    }
-
-    protected function _after()
-    {
-        
     }
 
     /**
@@ -56,13 +47,13 @@ class OrderOverviewTest extends \Codeception\Test\Unit
         $orderOverviewObj = new OrderOverview($oOrderOverview, $oCommonHelper);
         $result = $orderOverviewObj->getEasyStatus(100);
         $this->assertNotEmpty($result);
-        
+
         $oCommonHelper = $this->getMockBuilder(CommonHelper::class)->setMethods(['getCurlResponse', 'getVoidPaymentUrl', 'getPaymentId', 'getApiUrl'])->getMock();
         $oCommonHelper->expects($this->any())->method('getCurlResponse')->willReturn("{'chargeId':'dummyChargeId'}");
         $oCommonHelper->expects($this->any())->method('getVoidPaymentUrl')->willReturn('url');
         $oCommonHelper->expects($this->any())->method('getPaymentId')->willReturn(null);
         $oCommonHelper->expects($this->any())->method('getApiUrl')->willReturn('url');
-        
+
         $orderOverviewObj = new OrderOverview($oOrderOverview, $oCommonHelper);
         $result = $orderOverviewObj->getEasyStatus(100);
         $this->assertNotEmpty($result);
@@ -74,7 +65,16 @@ class OrderOverviewTest extends \Codeception\Test\Unit
     public function testGetPaymentStatus()
     {
         $response = $this->oOrderOverviewControllerTest->getNetsPaymentResponce();
+
         $result = $this->oOrderOverviewObject->getPaymentStatus(json_decode($response, true), 100);
+        if ($result) {
+            $this->assertNotEmpty($result);
+            $this->assertArrayHasKey('payStatus', $result);
+        }
+
+        $response = json_decode($response, true);
+        $response['payment']['summary']['reservedAmount'] = 1233;
+        $result = $this->oOrderOverviewObject->getPaymentStatus($response, 100);
         if ($result) {
             $this->assertNotEmpty($result);
             $this->assertArrayHasKey('payStatus', $result);
@@ -136,7 +136,6 @@ class OrderOverviewTest extends \Codeception\Test\Unit
     public function testGetValueItem()
     {
         $result = $this->oOrderOverviewObject->getValueItem(array("cancelledAmount" => 100, "oxbprice" => 10, "taxRate" => 2000), 100);
-        //echo "<pre>";print_r($result);die;
         if ($result) {
             $this->assertNotEmpty($result);
             $this->assertArrayHasKey('cancelledAmount', $result);
@@ -248,11 +247,10 @@ class OrderOverviewTest extends \Codeception\Test\Unit
         $oOrderOverview->oxorderarticles__oxbrutprice = new Field(true);
         $oOrderOverview->oxorderarticles__oxnetprice = new Field(true);
         $oOrderOverview->oxorderarticles__oxbprice = new Field(true);
-        
+
         $orderOverviewObj = new OrderOverview($oOrderOverview, null);
         $result = $orderOverviewObj->getItemList($oOrderOverview);
         $this->assertNotEmpty($result);
- 
     }
 
     /*
@@ -261,7 +259,7 @@ class OrderOverviewTest extends \Codeception\Test\Unit
 
     public function testGetShoppingCost()
     {
-       $oOrderOverview = $this->getMockBuilder(OrderOverview::class)->setMethods(['getOrderItems'])->getMock();
+        $oOrderOverview = $this->getMockBuilder(OrderOverview::class)->setMethods(['getOrderItems'])->getMock();
         $oOrderOverview->expects($this->any())->method('getOrderItems')->willReturn(array(
             'reference' => '1205',
             'name' => 'ABC',
@@ -276,13 +274,11 @@ class OrderOverviewTest extends \Codeception\Test\Unit
         ));
         $oOrderOverview->oxorder__oxdelcost = new Field(true);
         $oOrderOverview->oxorder__oxdelvat = new Field(true);
-         
+
         $orderOverviewObj = new OrderOverview($oOrderOverview, null);
         $result = $orderOverviewObj->getShoppingCost($oOrderOverview);
         $this->assertNotEmpty($result);
     }
-    
-
 
     /*
      * Test case to get greeting card items
@@ -305,12 +301,10 @@ class OrderOverviewTest extends \Codeception\Test\Unit
         ));
         $oOrderOverview->oxorder__oxgiftcardcost = new Field(true);
         $oOrderOverview->oxorder__oxgiftcardvat = new Field(true);
-         
+
         $orderOverviewObj = new OrderOverview($oOrderOverview, null);
         $result = $orderOverviewObj->getGreetingCardItem($oOrderOverview);
         $this->assertNotEmpty($result);
-        
-         
     }
 
     /*
@@ -334,12 +328,10 @@ class OrderOverviewTest extends \Codeception\Test\Unit
         ));
         $oOrderOverview->oxorder__oxwrapcost = new Field(true);
         $oOrderOverview->oxorder__oxwrapvat = new Field(true);
-         
+
         $orderOverviewObj = new OrderOverview($oOrderOverview, null);
         $result = $orderOverviewObj->getGiftWrappingItem($oOrderOverview);
         $this->assertNotEmpty($result);
-        
-          
     }
 
     /*
@@ -363,12 +355,10 @@ class OrderOverviewTest extends \Codeception\Test\Unit
         ));
         $oOrderOverview->oxorder__oxpaycost = new Field(true);
         $oOrderOverview->oxorder__oxpayvat = new Field(true);
-         
+
         $orderOverviewObj = new OrderOverview($oOrderOverview, null);
         $result = $orderOverviewObj->getPayCost($oOrderOverview);
         $this->assertNotEmpty($result);
-        
-       
     }
 
     /*
@@ -388,7 +378,7 @@ class OrderOverviewTest extends \Codeception\Test\Unit
     public function testGetChargeId()
     {
         $response = $this->oOrderOverviewControllerTest->getNetsPaymentResponce();
-        $oCommonHelper = $this->getMockBuilder(CommonHelper::class)->setMethods(['getCurlResponse',  'getPaymentId', 'getApiUrl'])->getMock();
+        $oCommonHelper = $this->getMockBuilder(CommonHelper::class)->setMethods(['getCurlResponse', 'getPaymentId', 'getApiUrl'])->getMock();
         $oCommonHelper->expects($this->any())->method('getCurlResponse')->willReturn($response);
         $oCommonHelper->expects($this->any())->method('getPaymentId')->willReturn(true);
         $oCommonHelper->expects($this->any())->method('getApiUrl')->willReturn('url');
@@ -396,8 +386,6 @@ class OrderOverviewTest extends \Codeception\Test\Unit
         $orderOverviewObj = new OrderOverview(null, $oCommonHelper);
         $result = $orderOverviewObj->getChargeId(100);
         $this->assertNotEmpty($result);
-        
-        
     }
 
     /*
@@ -418,11 +406,10 @@ class OrderOverviewTest extends \Codeception\Test\Unit
                 ]),
             "totalAmt" => 100
         );
-        //echo "<pre>";print_r($data);die;
         $items = $this->oOrderOverviewObject->getItemForRefund('fdaqwefffq1wd2', 1, $data);
         $this->assertNotEmpty($items);
     }
-     
+
     /*
      * Test case to prepare amount
      */
@@ -432,7 +419,5 @@ class OrderOverviewTest extends \Codeception\Test\Unit
         $amount = $this->oOrderOverviewObject->prepareAmount(1039);
         $this->assertNotEmpty($amount);
     }
-
-     
 
 }

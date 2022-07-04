@@ -19,26 +19,6 @@ class PaymentControllerTest extends \Codeception\Test\Unit
         parent::setUp();
     }
 
-    protected function _before()
-    {
-        
-    }
-
-    protected function _after()
-    {
-        
-    }
-
-    /**
-     * Test case to get dyn value 
-     * @return string
-     */
-    public function testInit()
-    {
-        //$initValue = $this->paymentObject->init();
-        $this->assertNull(null);
-    }
-
     /**
      * Test case to get Nets Payment Types from db
      */
@@ -50,12 +30,10 @@ class PaymentControllerTest extends \Codeception\Test\Unit
         } else {
             $this->assertNull($netsPaymentTypes);
         }
-        //echo "<pre>"; print_r($netsPaymentTypes);die;
     }
 
     /**
      * Test case to get dyn value 
-     * @return string
      */
     public function testGetDynValue()
     {

@@ -30,19 +30,8 @@ class OrderTest extends \Codeception\Test\Unit
         $this->orderObject = \oxNew(NetsOrder::class);
     }
 
-    protected function _before()
-    {
-        
-    }
-
-    protected function _after()
-    {
-        
-    }
-
     /**
      * Test case for get return data after hosted payment checkout is done
-     * @return null
      */
     public function testCreateNetsTransaction()
     {
@@ -86,8 +75,6 @@ class OrderTest extends \Codeception\Test\Unit
             'netTotalAmount' => 10000,
             'oxbprice' => 10000
         ));
-        //$basket->expects($this->any())->method('getCosts')->willReturn(false);
-
         \oxRegistry::getSession()->setBasket($basket);
 
         $oOrdeObj = new NetsOrder($oOrder, null, null);
@@ -138,13 +125,13 @@ class OrderTest extends \Codeception\Test\Unit
         $basket->expects($this->any())->method("getPrice")->will($this->returnValue($price));
 
         $articleMockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Application\Model\Article::class)->setMethods(['getArticle', 'getPrice', 'getAmount'])->getMock();
-        
+
         $articleMockBuilder->expects($this->any())->method("getArticle")->will($this->returnValue($basket));
         $articleMockBuilder->getArticle()->oxarticles__oxartnum = new Field(true);
         $articleMockBuilder->getArticle()->oxarticles__oxtitle = new Field(true);
         $articleMockBuilder->expects($this->any())->method("getPrice")->will($this->returnValue($price));
         $articleMockBuilder->expects($this->any())->method("getAmount")->willReturn(100);
-        
+
         $result = $this->orderObject->getProductItem($articleMockBuilder);
         $this->assertNotEmpty($result);
     }
@@ -382,7 +369,7 @@ class OrderTest extends \Codeception\Test\Unit
         $vouchersObj = new \stdClass;
         $vouchersObj->dVoucherdiscount = 122;
         $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Application\Model\Basket::class);
-        $mockBuilder->setMethods(['getTotalDiscount', 'getBruttoPrice',  'getVouchers']);
+        $mockBuilder->setMethods(['getTotalDiscount', 'getBruttoPrice', 'getVouchers']);
         $basket = $mockBuilder->getMock();
         //$basket->expects($this->any())->method('getPaymentCosts')->willReturn(-100);
         $basket->expects($this->any())->method('getBruttoPrice')->willReturn(100);
@@ -408,7 +395,11 @@ class OrderTest extends \Codeception\Test\Unit
         }
         \oxRegistry::getConfig()->setConfigParam('nets_checkout_mode', true);
         $embedded = $this->orderObject->isEmbedded();
-        $this->assertTrue($embedded);
+        if ($embedded) {
+            $this->assertTrue($embedded);
+        } else {
+            $this->assertFalse($embedded);
+        }
     }
 
     /**

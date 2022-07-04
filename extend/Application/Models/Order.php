@@ -28,7 +28,8 @@ class Order
     protected $oOrder;
     protected $oxUtils;
     protected $oxOrder;
-    public function __construct($oOrder = null, $commonHelper = null, $oxUtils = null,$oxOrder =null)
+
+    public function __construct($oOrder = null, $commonHelper = null, $oxUtils = null, $oxOrder = null)
     {
         $this->_NetsLog = true;
         if (!$oOrder) {
@@ -53,7 +54,7 @@ class Order
             $this->oxOrder = $oxOrder;
         }
     }
- 
+
     /**
      * Function to create transaction and call nets payment Api
      * @param $oOrder
@@ -601,7 +602,7 @@ class Order
      * Function to save payment details
      * @return null
      */
-    public function savePaymentDetails($api_ret,$paymentId=null)
+    public function savePaymentDetails($api_ret, $paymentId = null)
     {
         if (isset($api_ret)) {
             foreach ($api_ret['payment']['charges'] as $ky => $val) {

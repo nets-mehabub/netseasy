@@ -19,16 +19,6 @@ class PaymentGatewayTest extends \Codeception\Test\Unit
         $this->oPaymentGateway = \oxNew(NetsPaymentGateway::class);
     }
 
-    protected function _before()
-    {
-        
-    }
-
-    protected function _after()
-    {
-        
-    }
-
     /**
      * Test case to get product item
      */

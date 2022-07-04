@@ -7,15 +7,14 @@ use \Es\NetsEasy\extend\Application\Models\Order as NetsOrder;
 use OxidEsales\Eshop\Application\Model\Payment;
 use OxidEsales\Eshop\Core\Field;
 use OxidEsales\Eshop\Core\UtilsObject;
-use OxidEsales\Eshop\Core\Exception\StandardException;
 use OxidEsales\Eshop\Application\Controller\ThankyouController;
+
 class OrderControllerTest extends \Codeception\Test\Unit
 {
 
     /**
      * @var \UnitTester
      */
-    protected $tester;
     protected $orderObject;
 
     protected function setUp(): void
@@ -27,36 +26,11 @@ class OrderControllerTest extends \Codeception\Test\Unit
         $payment = $this->getMockBuilder(Payment::class)->setMethods(['load'])->getMock();
         $payment->expects($this->any())->method('load')->willReturn(true);
         $payment->oxpayments__oxactive = new Field(true);
-//        $oMockOxOrder = $this->getMock('oxOrder', array('load'));
-//        $oMockOxOrder->expects($this->any())->method('load')->will($this->returnValue(true));
-//        $oMockOxOrder->oxorder__fcpotxid = new oxField('1234');
-        // forcing payment id
-        //$this->setRequestParameter("paymentid", "oxidpaypal");
-        //$this->getSession()->setVariable("oepaypal-basketAmount", 129.00);
-//        $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Core\Price::class);
-//        $mockBuilder->setMethods(['getBruttoPrice']);
-//        $price = $mockBuilder->getMock();
-//        $price->expects($this->any())->method("getBruttoPrice")->will($this->returnValue(129.00));
-//
-//        $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Application\Model\Basket::class);
-//        $mockBuilder->setMethods(['getPrice']);
-//        $basket = $mockBuilder->getMock();
-//        $basket->expects($this->any())->method("getPrice")->will($this->returnValue($price));
-//
-//        $view = new \OxidEsales\PayPalModule\Controller\PaymentController();
-        //$this->assertTrue($view->isConfirmedByPayPal($basket));
     }
 
-    protected function _before()
-    {
-        
-    }
-
-    protected function _after()
-    {
-        
-    }
-
+    /**
+     * Test case for OrderController::execute()
+     */
     public function testExecute()
     {
         \oxRegistry::getSession()->setVariable('payment_id', '0230000062a996e863308f63c7333a01');
@@ -66,10 +40,7 @@ class OrderControllerTest extends \Codeception\Test\Unit
 
         $user = $this->getMockBuilder(User::class)->setMethods(['getType', 'onOrderExecute'])->getMock();
         $user->expects($this->any())->method('getType')->willReturn(0);
-        //$user->expects($this->any())->method('onOrderExecute')->willReturn(true);
-        // $oBasket = $this->getMockBuilder(KlarnaBasket::class)->setMethods(['calculateBasket'])->getMock();
-        //$oBasket->expects($this->any())->method('getPaymentId')->willReturn('klarna_checkout');
-        //$oBasket->expects($this->any())->method('calculateBasket')->willReturn(true);
+
         $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Application\Model\Basket::class);
         $mockBuilder->setMethods(['getProductsCount']);
         $basket = $mockBuilder->getMock();
@@ -79,37 +50,17 @@ class OrderControllerTest extends \Codeception\Test\Unit
         $mockBuilder = $this->getMockBuilder(\oxRegistry::class);
         $mockBuilder->setMethods(['redirect']);
         $utils = $mockBuilder->getMock();
-        //$utils->expects($this->any())->method("redirect")->with($this->equalTo(\oxRegistry::getConfig()
-        //                     ->getSslShopUrl() . 'index.php?cl=thankyou'));
+
         $utils->expects($this->any())->method('redirect')->willReturn('test');
 
-        //$sut = $this->getMockBuilder(OrderController::class)->setMethods(['init','getUtils'])->getMock();
-        // $sut->expects($this->any())->method("getUtils")->will($this->returnValue($utils));
-        // echo "<pre>";print_r($sut);die;
-        //$sut->expects($this->exactly(2))->method('processOrder')->willReturn(true);
-        //$sut->expects($this->any())->method('processOrder')->willReturn(true);
-        //$sut->expects($this->any())->method('klarnaCheckoutSecurityCheck')->willReturn(true);
-        //$this->setProtectedClassProperty($sut, 'oxorder__oxordernr', $order);
-        //$this->setProtectedClassProperty($sut, '_aOrderData', ['merchant_requested' => ['additional_checkbox' => true]]);
         $sGetChallenge = \oxRegistry::getSession()->getSessionChallengeToken();
-        //$this->setRequestParameter('stoken', $sGetChallenge);
-        // UtilsObject::setClassInstance(Order::class, $order);
-        //\oxRegistry::getSession()->setBasket($oBasket);
-        //UtilsObject::setClassInstance(NetsOrder::class, $order);
+
         $oOrderOverview = new OrderController($order, $mockBuilder, $utils);
         $result = $oOrderOverview->execute();
         $this->assertEquals('test', $result);
-        
+
         $order->expects($this->any())->method('isEmbedded')->willReturn(0);
         $result = $oOrderOverview->execute();
-        // echo "<pre>";print_r($result);die;
-        //$result  = $sut->execute();
-        // $this->assertTrue($oOrderOverview);
-        // 
-        //$addressResult = $this->getSessionParam('sDelAddrMD5');
-        //$this->assertEquals('address', $addressResult);
-        //$paymentId = $this->getSessionParam('paymentid');
-        //$this->assertEquals('klarna_checkout', $paymentId);
     }
 
     /**
@@ -117,8 +68,6 @@ class OrderControllerTest extends \Codeception\Test\Unit
      */
     public function testIsEmbedded()
     {
-
-        //$orderObject = \oxNew(OrderController::class);
         $embedded = $this->orderObject->isEmbedded();
         if ($embedded) {
             $this->assertTrue($embedded);
@@ -155,7 +104,6 @@ class OrderControllerTest extends \Codeception\Test\Unit
 
     /*
      * Test case for to get checkout js url based on environment i.e live or test
-     * @return checkout js url
      */
 
     public function testGetCheckoutJs()
@@ -169,7 +117,6 @@ class OrderControllerTest extends \Codeception\Test\Unit
 
     /*
      * Test case to fetch checkout key to pass in checkout js options based on environment live or test
-     * @return checkout key
      */
 
     public function testGetCheckoutKey()
@@ -180,7 +127,6 @@ class OrderControllerTest extends \Codeception\Test\Unit
 
     /*
      * Test case to compile layout style file url for the embedded checkout type
-     * @return layout style
      */
 
     public function testGetLayout()
@@ -214,8 +160,6 @@ class OrderControllerTest extends \Codeception\Test\Unit
         $basket = $mockBuilder->getMock();
         $basket->expects($this->any())->method("getPrice")->will($this->returnValue($price));
         \oxRegistry::getSession()->setBasket($basket);
-
-
         $basketAmount = $this->orderObject->getBasketAmount();
         $this->assertEquals(10000, $basketAmount);
     }
@@ -238,28 +182,6 @@ class OrderControllerTest extends \Codeception\Test\Unit
         $oOrderOverview = new OrderController($oOrder);
         $result = $oOrderOverview->getPaymentApiResponse();
         $this->assertTrue($result);
-        
-    }
-
-    /**
-     * Set a given protected property of a given class instance to a given value.
-     *
-     * Note: Please use this methods only for static 'mocking' or with other hard reasons!
-     *       For the most possible non static usages there exist other solutions.
-     *
-     * @param object $classInstance Instance of the class of which the property will be set
-     * @param string $property      Name of the property to be set
-     * @param mixed  $value         Value to which the property will be set
-     */
-    protected function setProtectedClassProperty($classInstance, $property, $value)
-    {
-        $className = get_class($classInstance);
-
-        $reflectionClass = new \ReflectionClass($className);
-
-        $reflectionProperty = $reflectionClass->getProperty($property);
-        $reflectionProperty->setAccessible(true);
-        $reflectionProperty->setValue($classInstance, $value);
     }
 
 }

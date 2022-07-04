@@ -7,13 +7,15 @@ namespace Es\NetsEasy\Api;
  */
 if (!class_exists("NetsLog")) {
 
-    class NetsLog {
+    class NetsLog
+    {
 
         /**
          * Function to save log details in nets file 
          * @return null
          */
-        public static function log($log) {
+        public static function log($log)
+        {
             if (!$log) {
                 return;
             }
@@ -38,7 +40,8 @@ if (!class_exists("NetsLog")) {
          * Function validate utf8 string 
          * @return bool
          */
-        public static function seems_utf8($Str) {
+        public static function seems_utf8($Str)
+        {
             for ($i = 0; $i < strlen($Str); $i ++) {
                 if (ord($Str[$i]) < 0x80)
                     continue;# 0bbbbbbb
@@ -68,18 +71,19 @@ if (!class_exists("NetsLog")) {
          * Function to check utf8 string 
          * @return $data array
          */
-        public static function utf8_ensure($data) {
+        public static function utf8_ensure($data)
+        {
             if (is_string($data)) {
-                return $this->seems_utf8($data) ? $data : \utf8_encode($data);
+                return self::seems_utf8($data) ? $data : \utf8_encode($data);
             } else if (is_array($data)) {
                 foreach ($data as $key => $value) {
-                    $data[$key] = $this->utf8_ensure($value);
+                    $data[$key] = self::utf8_ensure($value);
                 }
                 unset($value);
                 unset($key);
             } else if (is_object($data)) {
                 foreach ($data as $key => $value) {
-                    $data->$key = $this->utf8_ensure($value);
+                    $data->$key = self::utf8_ensure($value);
                 }
                 unset($value);
                 unset($key);
@@ -91,7 +95,8 @@ if (!class_exists("NetsLog")) {
          * Function to create transaction id in db
          * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
          */
-        public static function createTransactionEntry($req_data, $ret_data, $hash, $payment_id, $oxorder_id, $amount) {
+        public static function createTransactionEntry($req_data, $ret_data, $hash, $payment_id, $oxorder_id, $amount)
+        {
             $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
             $sSQL = "INSERT INTO oxnets (req_data, ret_data, transaction_id, oxordernr, oxorder_id, amount, created)" . " VALUES(?, ?, ?, ?, ?, ?,now())";
             $oDB->execute($sSQL, [
@@ -108,17 +113,18 @@ if (!class_exists("NetsLog")) {
          * Function to set transaction id in db
          * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
          */
-        public static function setTransactionId($hash, $transaction_id, $log_error = false) {
+        public static function setTransactionId($hash, $transaction_id, $log_error = false)
+        {
             if (!empty($hash) & !empty($transaction_id)) {
                 $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
                 $sqlQuery = "UPDATE oxnets SET transaction_id = ? WHERE ISNULL(transaction_id) AND hash = ?";
-                $this->log($log_error, 'nets_api, setTransactionId queries', $sqlQuery);
+                self::log($log_error, 'nets_api, setTransactionId queries', $sqlQuery);
                 $oDB->execute($sqlQuery, [
                     $transaction_id,
                     $hash
                 ]);
             } else {
-                $this->log($log_error, 'nets_api, hash or transaction_id empty');
+                self::log($log_error, 'nets_api, hash or transaction_id empty');
             }
         }
 
