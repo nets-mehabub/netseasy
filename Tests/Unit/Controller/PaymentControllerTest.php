@@ -74,9 +74,9 @@ class PaymentControllerTest extends \Codeception\Test\Unit
     {
         $paymentText = $this->paymentObject->getPaymentTextConfig();
         if ($paymentText) {
-            $this->assertNotNull($embedded);
+            $this->assertNotNull($paymentText);
         } else {
-            $this->assertNull($embedded);
+            $this->assertNull($paymentText);
         }
     }
 

@@ -6,6 +6,8 @@ use Es\NetsEasy\Api\NetsLog;
 use Es\NetsEasy\Api\NetsPaymentTypes;
 use Es\NetsEasy\extend\Application\Models\Order as NetsOrder;
 use Es\NetsEasy\Core\CommonHelper;
+use OxidEsales\Eshop\Core\Registry;
+use \oxRegistry;
 
 /**
  * Class controls nets payment process
@@ -22,31 +24,39 @@ class OrderController extends OrderController_parent
 
     protected $_NetsLog = false;
     protected $oCommonHelper = false;
+    protected $oNetsOrder;
+    protected $oxUtils;
 
     /**
      * Constructor
      */
-    public function __construct()
+    public function __construct($oNetsOrder = null, $commonHelper = null, $oxUtils = null)
     {
-        $this->_NetsLog = $this->getConfig()->getConfigParam('nets_blDebug_log');
+        $this->_NetsLog = \oxRegistry::getConfig()->getConfigParam('nets_blDebug_log');
         NetsLog::log($this->_NetsLog, "NetsOrderController, constructor");
-        $this->oCommonHelper = \oxNew(CommonHelper::class);
+
+
+        if (!$commonHelper) {
+            $this->oCommonHelper = \oxNew(CommonHelper::class);
+        } else {
+            $this->oCommonHelper = $commonHelper;
+        }
+
+        if (!$oNetsOrder) {
+            $this->oNetsOrder = \oxNew(NetsOrder::class);
+        } else {
+            $this->oNetsOrder = $oNetsOrder;
+        }
+
+        if (!$oxUtils) {
+            $this->oxUtils = \oxRegistry::getUtils();
+        } else {
+            $this->oxUtils = $oxUtils;
+        }
     }
 
     /**
-     * Function that returns next step in payment process, calls parent function
-     * @return string iSuccess
-     */
-    protected function _getNextStep($iSuccess)
-    {
-        NetsLog::log($this->_NetsLog, "NetsOrderController, _getNextStep");
-        $nextStep = parent::_getNextStep($iSuccess);
-        return $nextStep;
-    }
-
-    /**
-     * Function that executes the payment
-     * @return null
+     * @codeCoverageIgnore
      */
     public function execute()
     {
@@ -54,26 +64,20 @@ class OrderController extends OrderController_parent
         $oBasket = $this->getSession()->getBasket();
         $oUser = $this->getUser();
         if (!$oUser) {
-            return 'user';
+            // return 'user';
         }
         if ($oBasket->getProductsCount()) {
             try {
-                $netsOrder = \oxNew(NetsOrder::class);
-                if ($netsOrder->isEmbedded()) {
+                if ($this->oNetsOrder->isEmbedded()) {
                     //finalizing ordering process (validating, storing order into DB, executing payment, setting status 
-                    $netsOrder->processOrder($oUser);
-                    \oxRegistry::getUtils()->redirect($this->getConfig()
-                                    ->getSslShopUrl() . 'index.php?cl=thankyou');
+                    $this->oNetsOrder->processOrder($oUser);
+                    return $this->oxUtils->redirect(oxRegistry::getConfig()
+                                            ->getSslShopUrl() . 'index.php?cl=thankyou');
                 } else {
                     $this->getPaymentApiResponse();
                 }
-            } catch (\OxidEsales\Eshop\Core\Exception\OutOfStockException $oEx) {
-                $oEx->setDestination('basket');
-                Registry::getUtilsView()->addErrorToDisplay($oEx, false, true, 'basket');
-            } catch (\OxidEsales\Eshop\Core\Exception\NoArticleException $oEx) {
-                Registry::getUtilsView()->addErrorToDisplay($oEx);
-            } catch (\OxidEsales\Eshop\Core\Exception\ArticleInputException $oEx) {
-                Registry::getUtilsView()->addErrorToDisplay($oEx);
+            } catch (\Exception $e) {
+                Registry::getUtilsView()->addErrorToDisplay($e->getMessage(), false, true, 'basket');
             }
         }
     }
@@ -91,11 +95,15 @@ class OrderController extends OrderController_parent
      * Function to get basket amount
      * @return amount
      */
-    protected function getBasketAmount()
+    public function getBasketAmount()
     {
         $mySession = $this->getSession();
         $oBasket = $mySession->getBasket();
-        return intval(strval(($oBasket->getPrice()->getBruttoPrice() * 100)));
+        $returnValue = null;
+        if (!empty($oBasket->getPrice()->getBruttoPrice())) {
+            $returnValue = intval(strval(($oBasket->getPrice()->getBruttoPrice() * 100)));
+        }
+        return $returnValue;
     }
 
     /**
@@ -106,14 +114,13 @@ class OrderController extends OrderController_parent
     {
         //$paymentId = \oxRegistry::getConfig()->getRequestParameter('paymentid');
         $paymentId = \oxRegistry::getSession()->getVariable('payment_id');
-        if ($this->getConfig()->getConfigParam('nets_autocapture')) {
+        if (\oxRegistry::getConfig()->getConfigParam('nets_autocapture')) {
             $chargeResponse = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $paymentId, 'GET');
             $api_ret = json_decode($chargeResponse, true);
-            $netsOrder = \oxNew(NetsOrder::class);
-            $netsOrder->savePaymentDetails($api_ret);
+            $this->oNetsOrder->savePaymentDetails($api_ret,$paymentId);
         }
-        \oxRegistry::getUtils()->redirect($this->getConfig()
-                        ->getSslShopUrl() . 'index.php?cl=thankyou&paymentid=' . $paymentId);
+        return $this->oxUtils->redirect($this->getConfig()
+                                ->getSslShopUrl() . 'index.php?cl=thankyou&paymentid=' . $paymentId);
     }
 
     /*
@@ -139,18 +146,22 @@ class OrderController extends OrderController_parent
         // additional user check
         $oUser = $this->getUser();
         if (!$oUser) {
-            return 'user';
+            //return 'user';
         }
+        $returnValue = true;
         $oBasket = $this->getSession()->getBasket();
         if ($oBasket->getProductsCount()) {
             $oOrder = \oxNew(\OxidEsales\Eshop\Application\Model\Order::class);
             // finalizing ordering process (validating, storing order into DB, executing payment, setting status ...)
             $iSuccess = $oOrder->finalizeOrder($oBasket, $oUser);
             // performing special actions after user finishes order (assignment to special user groups)
-            $oUser->onOrderExecute($oBasket, $iSuccess);
-            $netsOrder = \oxNew(NetsOrder::class);
-            return $netsOrder->createNetsTransaction($oOrder);
+            //$oUser->onOrderExecute($oBasket, $iSuccess);
+
+            if ($oOrder) {
+                $returnValue = $this->oNetsOrder->createNetsTransaction($oOrder);
+            }
         }
+        return $returnValue;
     }
 
     /**
@@ -159,8 +170,8 @@ class OrderController extends OrderController_parent
      */
     public function isEmbedded()
     {
-        $netsOrder = \oxNew(NetsOrder::class);
-        return $netsOrder->isEmbedded();
+
+        return $this->oNetsOrder->isEmbedded();
     }
 
     /*

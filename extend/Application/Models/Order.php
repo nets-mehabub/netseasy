@@ -10,7 +10,8 @@ use Es\NetsEasy\Core\CommonHelper;
  * Nets oxOrder class
  * @mixin Es\NetsEasy\extend\Application\Model\Order
  */
-class Order {
+class Order
+{
 
     const EMBEDDED = "EmbeddedCheckout";
     const HOSTED = "HostedPaymentPage";
@@ -22,14 +23,45 @@ class Order {
     const MODULE_NAME = "nets_easy";
 
     protected $integrationType;
-
+    public $_NetsLog = true;
+    protected $oCommonHelper;
+    protected $oOrder;
+    protected $oxUtils;
+    protected $oxOrder;
+    public function __construct($oOrder = null, $commonHelper = null, $oxUtils = null,$oxOrder =null)
+    {
+        $this->_NetsLog = true;
+        if (!$oOrder) {
+            $this->oOrder = $this;
+        } else {
+            $this->oOrder = $oOrder;
+        }
+        // works only if StaticHelper is not autoloaded yet!
+        if (!$commonHelper) {
+            $this->oCommonHelper = \oxNew(CommonHelper::class);
+        } else {
+            $this->oCommonHelper = $commonHelper;
+        }
+        if (!$oxUtils) {
+            $this->oxUtils = \oxRegistry::getUtils();
+        } else {
+            $this->oxUtils = $oxUtils;
+        }
+        if (!$oxOrder) {
+            $this->oxOrder = \oxNew(\OxidEsales\Eshop\Application\Model\Order::class);
+        } else {
+            $this->oxOrder = $oxOrder;
+        }
+    }
+ 
     /**
      * Function to create transaction and call nets payment Api
      * @param $oOrder
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      */
-    public function createNetsTransaction($oOrder) {
-        $this->_NetsLog = \oxRegistry::getConfig()->getConfigParam('nets_blDebug_log');
+    public function createNetsTransaction($oOrder)
+    {
+        $this->_NetsLog = true;
         \oxRegistry::getSession()->deleteVariable('nets_err_msg');
         NetsLog::log($this->_NetsLog, "NetsOrder createNetsTransaction");
         $items = [];
@@ -41,15 +73,16 @@ class Order {
         $sCountryId = $oUser->oxuser__oxcountryid->value;
         $mySession = \oxRegistry::getSession();
         $oBasket = $mySession->getBasket();
-        $oID = $this->updateOrdernr(\oxRegistry::getSession()
+        $oID = $this->oOrder->updateOrdernr(\oxRegistry::getSession()
                         ->getVariable('sess_challenge'));
-        $this->logOrderID($oOrder, $oID);
-        $oID = $this->getOrderId();
-        $daten = $this->setLanguage($oUser, $sTranslation, $oBasket);
+        $this->oOrder->logOrderID($oOrder, $oID);
+        $oID = $this->oOrder->getOrderId();
+        $daten = $this->oOrder->setLanguage($oUser, $sTranslation = '', $oBasket);
         $basketcontents = $oBasket->getContents();
-        $this->getItemList($oBasket);
+        $this->oOrder->getItemList($oBasket);
         /* gift wrap and greeting card amount to be added in total amount */
         $wrappingCostAmt = $oBasket->getCosts('oxwrapping');
+        $wrapCost = $greetCardAmt = $shipCostAmt = $payCostAmt = 0;
         if ($wrappingCostAmt) {
             $wrapCost = $oBasket->isCalculationModeNetto() ? $wrappingCostAmt->getNettoPrice() : $wrappingCostAmt->getBruttoPrice();
             $wrapCost = round(round($wrapCost, 2) * 100);
@@ -59,14 +92,14 @@ class Order {
             $greetCardAmt = $oBasket->isCalculationModeNetto() ? $greetingCardAmt->getNettoPrice() : $greetingCardAmt->getBruttoPrice();
             $greetCardAmt = round(round($greetCardAmt, 2) * 100);
         }
-        $this->getDiscountItem($wrapCost, $greetCardAmt);
+        $this->oOrder->getDiscountItem($wrapCost, $greetCardAmt);
         $sumAmt = 0;
         foreach ($basketcontents as $item) {
-            $items[] = $itemArray = $this->getProductItem($item);
+            $items[] = $itemArray = $this->oOrder->getProductItem($item);
             $sumAmt += $itemArray['grossTotalAmount'];
         }
         $sumAmt = $sumAmt + $wrapCost + $greetCardAmt + $shipCostAmt + $payCostAmt;
-        $daten['delivery_address'] = $this->getDeliveryAddress($oOrder, $oDB, $oUser);
+        $daten['delivery_address'] = $this->oOrder->getDeliveryAddress($oOrder, $oDB, $oUser);
         // create order to be passed to nets api
         $data = [
             'order' => [
@@ -76,21 +109,23 @@ class Order {
                 'reference' => $oID
             ]
         ];
-        $data = $this->prepareDatastringParams($daten, $data);
+        $data = $this->oOrder->prepareDatastringParams($daten, $data, $paymentId = null);
         try {
-            return $this->getPaymentResponse($data, $oBasket);
+            return $this->oOrder->getPaymentResponse($data, $oBasket, $oID);
         } catch (Exception $e) {
-            $this->logCatchErrors($e);
+            $this->oOrder->logCatchErrors($e);
             \oxRegistry::getUtils()->redirect(\oxRegistry::getConfig()
                             ->getSslShopUrl() . 'index.php?cl=netsorder');
         }
+        return true;
     }
 
     /**
      * Function to log Order ID
      * @return null
      */
-    public function logOrderID($oOrder, $oID) {
+    public function logOrderID($oOrder, $oID)
+    {
         NetsLog::log($this->_NetsLog, 'oID: ', $oOrder->oxorder__oxordernr->value);
         // if oID is empty, use session value
         if (empty($oID)) {
@@ -105,7 +140,8 @@ class Order {
      * Function to log catch errors
      * @return null
      */
-    public function logCatchErrors($e) {
+    public function logCatchErrors($e)
+    {
         $error_message = $e->getMessage();
         NetsLog::log($this->_NetsLog, "NetsOrder, api exception : ", $e->getMessage());
         NetsLog::log($this->_NetsLog, "NetsOrder, $error_message");
@@ -119,7 +155,8 @@ class Order {
      * Function to get product item
      * @return array
      */
-    public function getProductItem($item) {
+    public function getProductItem($item)
+    {
         $quantity = $item->getAmount();
         $prodPrice = $item->getArticle()
                 ->getPrice(1)
@@ -147,7 +184,8 @@ class Order {
      * Function to set language
      * @return array
      */
-    public function setLanguage($oUser, $sTranslation, $oBasket) {
+    public function setLanguage($oUser, $sTranslation, $oBasket)
+    {
         $oLang = \oxRegistry::getLang();
         $iLang = 0;
         $iLang = $oLang->getTplLanguage();
@@ -180,20 +218,23 @@ class Order {
      * Function to get payment response
      * @return payment id
      */
-    public function getPaymentResponse($data, $oBasket) {
+    public function getPaymentResponse($data, $oBasket, $oID)
+    {
         $modus = \oxRegistry::getConfig()->getConfigParam('nets_blMode');
         if ($modus == 0) {
             $apiUrl = self::ENDPOINT_TEST;
         } else {
             $apiUrl = self::ENDPOINT_LIVE;
         }
-        NetsLog::log($this->_NetsLog, "NetsOrder, api request data here 2 : ", json_encode($data));
-        $api_return = CommonHelper::getCurlResponse($apiUrl, 'POST', json_encode($data));
+        NetsLog::log(true, "NetsOrder, api request data here 2 : ", json_encode($data));
+        $api_return = $this->oCommonHelper->getCurlResponse($apiUrl, 'POST', json_encode($data));
         $response = json_decode($api_return, true);
-
+        if (!isset($response['paymentId'])) {
+            $response['paymentId'] = null;
+        }
         NetsLog::log($this->_NetsLog, "NetsOrder, api return data create trans: ", json_decode($api_return, true));
         // create entry in oxnets table for transaction
-        NetsLog::createTransactionEntry(json_encode($data), $api_return, $this->getOrderId(), $response['paymentId'], $oID, intval(strval($oBasket->getPrice()->getBruttoPrice() * 100)));
+        NetsLog::createTransactionEntry(json_encode($data), $api_return, $this->oOrder->getOrderId(), $response['paymentId'], $oID, intval(strval($oBasket->getPrice()->getBruttoPrice() * 100)));
         // Set language for hosted payment page
         $language = \oxRegistry::getLang()->getLanguageAbbr();
         if ($language == 'en') {
@@ -239,7 +280,8 @@ class Order {
      * Function to prepare datastring params array
      * @return array
      */
-    public function prepareDatastringParams($daten, $data) {
+    public function prepareDatastringParams($daten, $data, $paymentId = null)
+    {
         $delivery_address = $daten['delivery_address'];
         if (\oxRegistry::getConfig()->getConfigParam('nets_checkout_mode') == 'embedded') {
             $this->integrationType = self::EMBEDDED;
@@ -289,7 +331,8 @@ class Order {
      * Function to get dDelivery address array
      * @return array
      */
-    public function getDeliveryAddress($oOrder, $oDB, $oUser) {
+    public function getDeliveryAddress($oOrder, $oDB, $oUser)
+    {
         $oDelAd = $oOrder->getDelAddressInfo();
         if ($oDelAd) {
             $delivery_address = new \stdClass();
@@ -325,7 +368,8 @@ class Order {
      * Function to get discount item array
      * @return null
      */
-    public function getDiscountItem($wrapCost, $greetCardAmt) {
+    public function getDiscountItem($wrapCost, $greetCardAmt)
+    {
         if ($wrapCost > 0) {
             $items[] = [
                 'reference' => 'Gift Wrapping',
@@ -357,7 +401,8 @@ class Order {
      * Function to get item list array
      * @return null
      */
-    public function getItemList($oBasket) {
+    public function getItemList($oBasket)
+    {
         $wrapCost = $greetCardAmt = $shippingCost = $payCost = 0;
         $shippingCost = $oBasket->getDeliveryCost();
         if ($shippingCost) {
@@ -393,7 +438,7 @@ class Order {
                 'netTotalAmount' => $payCostAmt
             ];
         }
-        $discAmount = $this->getDiscountSum($oBasket);
+        $discAmount = $this->oOrder->getDiscountSum($oBasket);
         if ($discAmount > 0) {
             $items[] = [
                 'reference' => 'discount',
@@ -413,7 +458,8 @@ class Order {
      * Function to finalizing ordering process (validating, storing order into DB, executing payment, setting status 
      * @return null
      */
-    public function processOrder($oUser) {
+    public function processOrder($oUser)
+    {
         $sess_id = \oxRegistry::getSession()->getVariable('sess_challenge');
         //$resultSet = \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->select($query);
         $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
@@ -428,12 +474,15 @@ class Order {
         }
         // finalizing ordering process (validating, storing order into DB, executing payment, setting status ...)
         $oBasket = \oxRegistry::getSession()->getBasket();
-        $oOrder = \oxNew(\OxidEsales\Eshop\Application\Model\Order::class);
-        $iSuccess = $oOrder->finalizeOrder($oBasket, $oUser);
-        $orderNr = $oOrder->oxorder__oxordernr->value;
+        //$oOrder = \oxNew(\OxidEsales\Eshop\Application\Model\Order::class);
+        $iSuccess = $this->oxOrder->finalizeOrder($oBasket, $oUser);
         $paymentId = \oxRegistry::getSession()->getVariable('payment_id');
-        \oxRegistry::getSession()->setVariable('orderNr', $orderNr);
-        NetsLog::log($this->_NetsLog, " refupdate NetsOrder, order nr", $oOrder->oxorder__oxordernr->value);
+        $orderNr = null;
+        if (isset($this->oxOrder->oxorder__oxordernr->value)) {
+            $orderNr = $this->oxOrder->oxorder__oxordernr->value;
+            NetsLog::log($this->_NetsLog, " refupdate NetsOrder, order nr", $this->oxOrder->oxorder__oxordernr->value);
+            \oxRegistry::getSession()->setVariable('orderNr', $orderNr);
+        }
         $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
         $oDb->execute("UPDATE oxnets SET oxordernr = ?,  hash = ?, oxorder_id = ? WHERE transaction_id = ? ", [
             $orderNr,
@@ -443,19 +492,19 @@ class Order {
                     ->getVariable('sess_challenge'),
             $paymentId
         ]);
-        $api_return = CommonHelper::getCurlResponse(CommonHelper::getApiUrl() . $paymentId, "GET");
+        $api_return = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $paymentId, "GET");
         $response = json_decode($api_return, true);
         NetsLog::log($this->_NetsLog, " payment api status NetsOrder, response", $response);
         $refUpdate = [
             'reference' => $orderNr,
             'checkoutUrl' => $response['payment']['checkout']['url']
         ];
-        NetsLog::log($this->_NetsLog, " refupdate NetsOrder, order nr", $oOrder->oxorder__oxordernr->value);
+        //NetsLog::log($this->_NetsLog, " refupdate NetsOrder, order nr", $oOrder->oxorder__oxordernr->value);
         NetsLog::log($this->_NetsLog, " payment api status NetsOrder, response checkout url", $response['payment']['checkout']['url']);
         NetsLog::log($this->_NetsLog, " refupdate NetsOrder, response", $refUpdate);
-        CommonHelper::getCurlResponse(CommonHelper::getUpdateRefUrl($paymentId), 'PUT', json_encode($refUpdate));
+        $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getUpdateRefUrl($paymentId), 'PUT', json_encode($refUpdate));
         if (\oxRegistry::getConfig()->getConfigParam('nets_autocapture')) {
-            $chargeResponse = CommonHelper::getCurlResponse(CommonHelper::getApiUrl() . $paymentId, 'GET');
+            $chargeResponse = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $paymentId, 'GET');
             $api_ret = json_decode($chargeResponse, true);
             if (isset($api_ret)) {
                 foreach ($api_ret['payment']['charges'] as $ky => $val) {
@@ -469,6 +518,7 @@ class Order {
                 }
             }
         }
+        return true;
     }
 
     /**
@@ -476,11 +526,12 @@ class Order {
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
      * @return $oOrderrnr
      */
-    protected function updateOrdernr($hash) {
-        $oID = $this->getOrderId();
-        $oOrder = \oxNew(\OxidEsales\Eshop\Application\Model\Order::class);
-        $oOrder->load($oID);
-        $oOrdernr = $oOrder->oxorder__oxordernr->value;
+    public function updateOrdernr($hash)
+    {
+        $oID = $this->oOrder->getOrderId();
+        //$oOrder = \oxNew(\OxidEsales\Eshop\Application\Model\Order::class);
+        $this->oxOrder->load($oID);
+        $oOrdernr = $this->oxOrder->oxorder__oxordernr->value;
         NetsLog::log($this->_NetsLog, "NetsOrder, updateOrdernr: " . $oOrdernr . " for hash " . $hash);
         if (is_numeric($oOrdernr) && !empty($hash)) {
             $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
@@ -497,7 +548,8 @@ class Order {
      * Function to get current order from basket
      * @return array
      */
-    protected function getOrderId() {
+    public function getOrderId()
+    {
         $mySession = \oxRegistry::getSession();
         $oBasket = $mySession->getBasket();
         return $oBasket->getOrderId();
@@ -507,7 +559,8 @@ class Order {
      * Function to get all type of discounts altogether and pass it to nets api
      * @return float
      */
-    public function getDiscountSum($basket) {
+    public function getDiscountSum($basket)
+    {
         $discount = 0.0;
         $totalDiscount = $basket->getTotalDiscount();
         if ($totalDiscount) {
@@ -530,7 +583,8 @@ class Order {
      * Function to check if it embedded checkout
      * @return bool
      */
-    public function isEmbedded() {
+    public function isEmbedded()
+    {
         $mode = \oxRegistry::getConfig()->getConfigParam('nets_checkout_mode');
         $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
         $sSQL_select = "SELECT OXACTIVE FROM oxpayments WHERE oxid = ? LIMIT 1";
@@ -547,7 +601,8 @@ class Order {
      * Function to save payment details
      * @return null
      */
-    public function savePaymentDetails($api_ret) {
+    public function savePaymentDetails($api_ret,$paymentId=null)
+    {
         if (isset($api_ret)) {
             foreach ($api_ret['payment']['charges'] as $ky => $val) {
                 foreach ($val['orderItems'] as $key => $value) {
@@ -559,6 +614,7 @@ class Order {
                 }
             }
         }
+        return true;
     }
 
 }

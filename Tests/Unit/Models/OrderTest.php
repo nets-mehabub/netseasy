@@ -8,8 +8,12 @@ use OxidEsales\Eshop\Application\Model\User;
 use \Es\NetsEasy\extend\Application\Models\Order as NetsOrder;
 use Es\NetsEasy\Api\NetsLog;
 use Es\NetsEasy\Core\CommonHelper;
+use OxidEsales\Eshop\Core\Field;
+use OxidEsales\Eshop\Core\UtilsObject;
+use OxidEsales\Eshop\Core\Registry;
 
-class OrderTest extends \Codeception\Test\Unit {
+class OrderTest extends \Codeception\Test\Unit
+{
 
     /**
      * @var \UnitTester
@@ -19,200 +23,447 @@ class OrderTest extends \Codeception\Test\Unit {
     const ENDPOINT_TEST = 'https://test.api.dibspayment.eu/v1/payments/';
     const ENDPOINT_LIVE = 'https://api.dibspayment.eu/v1/payments/';
 
-    protected function setUp(): void {
+    protected function setUp(): void
+    {
         parent::setUp();
         include_once dirname(__FILE__) . "/../../../../../../bootstrap.php";
         $this->orderObject = \oxNew(NetsOrder::class);
     }
 
-    protected function _before() {
+    protected function _before()
+    {
         
     }
 
-    protected function _after() {
+    protected function _after()
+    {
         
+    }
+
+    /**
+     * Test case for get return data after hosted payment checkout is done
+     * @return null
+     */
+    public function testCreateNetsTransaction()
+    {
+        \oxRegistry::getSession()->setVariable('usr', $this->getUserId());
+
+        $oOrder = $this->getMockBuilder(NetsOrder::class)->setMethods(['updateOrdernr', 'logOrderID', 'getOrderId', 'setLanguage', 'getItemList', 'getDiscountItem', 'getProductItem', 'getDeliveryAddress', 'prepareDatastringParams', 'getPaymentResponse'])->getMock();
+        $oOrder->expects($this->any())->method('updateOrdernr')->willReturn(1);
+        $oOrder->expects($this->any())->method('logOrderID')->willReturn(1);
+        $oOrder->expects($this->any())->method('getOrderId')->willReturn(1);
+        $oOrder->expects($this->any())->method('setLanguage')->willReturn(array('delivery_address'));
+        $oOrder->expects($this->any())->method('getProductItem')->willReturn(array(
+            'reference' => '1205',
+            'name' => 'ABC',
+            'quantity' => 1,
+            'unit' => 'units',
+            'unitPrice' => 10000,
+            'taxRate' => 2500,
+            'taxAmount' => 250,
+            'grossTotalAmount' => 12500,
+            'netTotalAmount' => 10000,
+            'oxbprice' => 10000
+        ));
+        $oOrder->expects($this->any())->method('getItemList')->willReturn(1);
+        $oOrder->expects($this->any())->method('getDiscountItem')->willReturn(1);
+        $oOrder->expects($this->any())->method('getDeliveryAddress')->willReturn(1);
+        $oOrder->expects($this->any())->method('prepareDatastringParams')->willReturn(1);
+        $oOrder->expects($this->any())->method('getPaymentResponse')->willReturn(true);
+
+        $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Application\Model\Basket::class);
+        $mockBuilder->setMethods(['getContents']);
+        $basket = $mockBuilder->getMock();
+        $basket->expects($this->any())->method("getContents")->willReturn(array(
+            'reference' => '1205',
+            'name' => 'ABC',
+            'quantity' => 1,
+            'unit' => 'units',
+            'unitPrice' => 10000,
+            'taxRate' => 2500,
+            'taxAmount' => 250,
+            'grossTotalAmount' => 12500,
+            'netTotalAmount' => 10000,
+            'oxbprice' => 10000
+        ));
+        //$basket->expects($this->any())->method('getCosts')->willReturn(false);
+
+        \oxRegistry::getSession()->setBasket($basket);
+
+        $oOrdeObj = new NetsOrder($oOrder, null, null);
+        $result = $oOrdeObj->createNetsTransaction(100);
+        $this->assertTrue($result);
+    }
+
+    /**
+     * Test case to log Order ID
+     */
+    public function testLogOrderID()
+    {
+        $oOrder = $this->getMockBuilder(NetsOrder::class)->setMethods(['logOrderID'])->getMock();
+        $oOrder->expects($this->any())->method('logOrderID')->willReturn(1);
+        $oOrder->oxorder__oxordernr = new Field(true);
+        \oxRegistry::getSession()->setVariable('sess_challenge', '0230000062a996e863308f63c7333a01');
+        $oOrdeObj = new NetsOrder($oOrder, null, null);
+        $result = $oOrdeObj->logOrderID($oOrder, null);
+        $this->assertNull($result);
+
+        $oOrdeObj = new NetsOrder($oOrder, null, $oOrder);
+    }
+
+    /**
+     * Test case to log Order ID
+     */
+    public function testLogCatchErrors()
+    {
+        $e = new \Exception();
+        $result = $this->orderObject->logCatchErrors($e);
+        $this->assertNull($result);
     }
 
     /**
      * Test case to get product item
      */
-    public function testGetProductItem() {
-        $oBasket = $this->getBasket();
-        $basketcontents = $oBasket->getContents();
-        foreach ($basketcontents as $item) {
-            $items[] = $itemArray = $this->orderObject->getProductItem($item);
-        }
-        $this->assertArrayHasKey('reference', $items[0]);
-        $this->assertNotEmpty($items[0]);
+    public function testGetProductItem()
+    {
+        $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Core\Price::class);
+        $mockBuilder->setMethods(['getBruttoPrice', 'getVat']);
+        $price = $mockBuilder->getMock();
+        $price->expects($this->any())->method("getBruttoPrice")->will($this->returnValue(129.00));
+        $price->expects($this->any())->method("getVat")->willReturn(100);
+
+        $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Application\Model\Basket::class);
+        $mockBuilder->setMethods(['getPrice']);
+        $basket = $mockBuilder->getMock();
+        $basket->expects($this->any())->method("getPrice")->will($this->returnValue($price));
+
+        $articleMockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Application\Model\Article::class)->setMethods(['getArticle', 'getPrice', 'getAmount'])->getMock();
+        
+        $articleMockBuilder->expects($this->any())->method("getArticle")->will($this->returnValue($basket));
+        $articleMockBuilder->getArticle()->oxarticles__oxartnum = new Field(true);
+        $articleMockBuilder->getArticle()->oxarticles__oxtitle = new Field(true);
+        $articleMockBuilder->expects($this->any())->method("getPrice")->will($this->returnValue($price));
+        $articleMockBuilder->expects($this->any())->method("getAmount")->willReturn(100);
+        
+        $result = $this->orderObject->getProductItem($articleMockBuilder);
+        $this->assertNotEmpty($result);
     }
 
     /**
      * Test case to set language
      */
-    public function testSetLanguage() {
-        $oBasket = $this->getBasket();
+    public function testSetLanguage()
+    {
+        $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Core\Price::class);
+        $mockBuilder->setMethods(['getBruttoPrice']);
+        $price = $mockBuilder->getMock();
+        $price->expects($this->any())->method("getBruttoPrice")->will($this->returnValue(129.00));
+
+        $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Application\Model\Basket::class);
+        $mockBuilder->setMethods(['getPrice']);
+        $basket = $mockBuilder->getMock();
+        $basket->expects($this->any())->method("getPrice")->will($this->returnValue($price));
+
+        $sUserID = $this->getUserId();
         $oUser = \oxNew("oxuser", "core");
         $oUser->Load($sUserID);
-        $result = $this->orderObject->setLanguage($oUser, $sTranslation, $oBasket);
+        $result = $this->orderObject->setLanguage($oUser, $sTranslation = null, $basket);
         $this->assertArrayHasKey('language', $result);
         $this->assertNotEmpty($result['checkout_type']);
-        $this->assertEquals('embedded', $result['checkout_type']);
     }
 
     /**
      * Test case to get payment response
      */
-    public function testGetPaymentResponse() {
-        $modus = \oxRegistry::getConfig()->getConfigParam('nets_blMode');
-        if ($modus == 0) {
-            $apiUrl = self::ENDPOINT_TEST;
-        } else {
-            $apiUrl = self::ENDPOINT_LIVE;
-        }
+    public function testGetPaymentResponse()
+    {
+        $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Core\Price::class);
+        $mockBuilder->setMethods(['getBruttoPrice']);
+        $price = $mockBuilder->getMock();
+        $price->expects($this->any())->method("getBruttoPrice")->will($this->returnValue(129.00));
+
+        $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Application\Model\Basket::class);
+        $mockBuilder->setMethods(['getPrice']);
+        $basket = $mockBuilder->getMock();
+        $basket->expects($this->any())->method("getPrice")->will($this->returnValue($price));
+
         $datastring = $this->getDatastring();
-        $api_return = CommonHelper::getCurlResponse($apiUrl, 'POST', $datastring);
-        $response = json_decode($api_return, true);
-        $this->assertNotEmpty($response['paymentId']);
+        $oCommonHelper = $this->getMockBuilder(CommonHelper::class)->setMethods(['getCurlResponse', 'getApiUrl'])->getMock();
+        $oCommonHelper->expects($this->any())->method('getCurlResponse')->willReturn("{'paymentId':'testpaymentId'}");
+        $oCommonHelper->expects($this->any())->method('getApiUrl')->willReturn('url');
+
+        $oOrder = new NetsOrder(null, $oCommonHelper, null);
+        $result = $oOrder->getPaymentResponse($datastring, $basket, 100);
+        $this->assertNull($result);
+    }
+
+    /**
+     * Test case to get prepare datastring Params array
+     */
+    public function testPrepareDatastringParams()
+    {
+        $deliverAddrObj = new \stdClass;
+        $deliverAddrObj->housenumber = 122;
+        $deliverAddrObj->street = 'xys street';
+        $deliverAddrObj->zip = 4122;
+        $deliverAddrObj->city = 'Neyork';
+        $deliverAddrObj->country = 'In';
+        $deliverAddrObj->company = 'XZY';
+        $deliverAddrObj->firstname = 'firstname';
+        $deliverAddrObj->lastname = 'lastname';
+
+        $daten = array('delivery_address' => $deliverAddrObj, 'email' => 'test@test.com');
+        $result = $this->orderObject->prepareDatastringParams($daten, array(), $paymentId = null);
+        $this->assertNotEmpty($result);
+        $deliverAddrObj->company = '';
+        \oxRegistry::getConfig()->setConfigParam('nets_checkout_mode', true);
+        $result = $this->orderObject->prepareDatastringParams($daten, array(), $paymentId = null);
     }
 
     /**
      * Test case to get dDelivery address array
      */
-    public function testGetDeliveryAddress() {
+    public function testGetDeliveryAddress()
+    {
         $oMockOrder = $this->getMockBuilder(Order::class)->setMethods(['Load'])->getMock();
+
         $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Core\DatabaseProvider::class);
         $mockBuilder->setMethods(['getDb', 'getOne']);
         $mockDB = $mockBuilder->getMock();
         $oMockUser = $this->getMockBuilder(User::class)->setMethods(['Load'])->getMock();
-        $oMockUser->expects($this->any())->method('Load')->willReturn(2);
-        $result = $this->orderObject->getDeliveryAddress($oMockOrder, $mockDB, $oMockUser);
+        //$oMockUser->expects($this->any())->method('Load')->willReturn(2);
+        $sUserID = $this->getUserId();
+        $oUser = \oxNew("oxuser", "core");
+        $oUser->Load($sUserID);
+        $result = $this->orderObject->getDeliveryAddress($oMockOrder, $mockDB, $oUser);
+        $this->assertObjectHasAttribute('firstname', $result);
+
+        $oMockOrder = $this->getMockBuilder(Order::class)->setMethods(['Load', 'getDelAddressInfo'])->getMock();
+
+        $oMockOrder->oxaddress__oxfname = new Field(true);
+        $oMockOrder->oxaddress__oxlname = new Field(true);
+        $oMockOrder->oxaddress__oxstreet = new Field(true);
+        $oMockOrder->oxaddress__oxstreetnr = new Field(true);
+        $oMockOrder->oxaddress__oxzip = new Field(true);
+        $oMockOrder->oxaddress__oxcity = new Field(true);
+        $oMockOrder->oxaddress__oxcountryid = new Field(true);
+        $oMockOrder->oxaddress__oxcompany = new Field(true);
+
+        $oMockOrder->expects($this->any())->method("getDelAddressInfo")->will($this->returnValue($oMockOrder));
+        $result = $this->orderObject->getDeliveryAddress($oMockOrder, $mockDB, $oUser);
         $this->assertObjectHasAttribute('firstname', $result);
     }
 
     /**
      * Test case to get discount item array
      */
-    public function testGetDiscountItem() {
-        $result = $this->orderObject->getDiscountItem(100, null);
+    public function testGetDiscountItem()
+    {
+        $result = $this->orderObject->getDiscountItem(100, 100);
         $this->assertArrayHasKey('grossTotalAmount', $result[0]);
         $this->assertContains(100, $result[0]);
     }
 
     /**
-     * Test case to get current order from basket
+     * Test case to get item list array
      */
-    public function testGetDiscountSum() {
-        $oBasket = $this->getBasket();
-        $result = $this->orderObject->getDiscountSum($oBasket);
-        $this->assertEmpty($result);
+    public function testGetItemList()
+    {
+        $oOrder = $this->getMockBuilder(NetsOrder::class)->setMethods(['getDiscountSum'])->getMock();
+        $oOrder->expects($this->any())->method('getDiscountSum')->willReturn(100);
+
+        $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Application\Model\Basket::class);
+        $mockBuilder->setMethods(['getContents', 'getDeliveryCost', 'getBruttoPrice', 'getPaymentCost']);
+        $basket = $mockBuilder->getMock();
+        $basket->expects($this->any())->method("getContents")->willReturn(array(
+            'reference' => '1205',
+            'name' => 'ABC',
+            'quantity' => 1,
+            'unit' => 'units',
+            'unitPrice' => 10000,
+            'taxRate' => 2500,
+            'taxAmount' => 250,
+            'grossTotalAmount' => 12500,
+            'netTotalAmount' => 10000,
+            'oxbprice' => 10000
+        ));
+        $basket->expects($this->any())->method('getBruttoPrice')->willReturn(100);
+        $basket->expects($this->any())->method('getDeliveryCost')->will($this->returnValue($basket));
+
+        $basket->expects($this->any())->method('getBruttoPrice')->willReturn(100);
+        $basket->expects($this->any())->method('getPaymentCost')->will($this->returnValue($basket));
+
+        $oOrdeObj = new NetsOrder($oOrder, null, null);
+        $result = $oOrdeObj->getItemList($basket);
+        $this->assertNotEmpty($result);
     }
 
     /**
-     * Test case to log Order ID
+     * Test case to get process order
      */
-    public function testLogOrderID() {
-        $responce = NetsLog::log('test log');
-        $this->assertTrue($responce);
+    public function testProcessOrder()
+    {
+        \oxRegistry::getSession()->setVariable('payment_id', 'test_payment_id');
+
+        $oMockOrder = $this->getMockBuilder(Order::class)->setMethods(['finalizeOrder'])->getMock();
+        $oMockOrder->oxorder__oxordernr = new Field(true);
+        $oMockOrder->expects($this->once())->method('finalizeOrder')->willReturn(1);
+
+        $oCommonHelper = $this->getMockBuilder(CommonHelper::class)->setMethods(['getCurlResponse', 'getApiUrl', 'getUpdateRefUrl'])->getMock();
+        $oCommonHelper->expects($this->any())->method('getCurlResponse')->willReturn('{
+            "payment":{
+               "paymentId":"0126000062a745c1f24370d976ebd20e",
+               "checkout":{
+                  "url":"http://oxideshop.local:81/index.php?cl=thankyou"
+               },
+               "charges":[
+                  {
+                     "chargeId":"00ab000062a7462cf24370d976ebd21d",
+                     "amount":32900,
+                     "created":"2022-06-13T14:14:04.5570+00:00",
+                     "orderItems":[
+                        {
+                           "reference":"2103",
+                           "name":"Wakeboard GROOVE",
+                           "quantity":1.0,
+                           "unit":"pcs",
+                           "unitPrice":27647,
+                           "taxRate":1900,
+                           "taxAmount":5253,
+                           "grossTotalAmount":32900,
+                           "netTotalAmount":27647
+                        }
+                     ]
+                  }
+               ]
+            }
+         }');
+        $oCommonHelper->expects($this->any())->method('getApiUrl')->willReturn('url');
+        $oCommonHelper->expects($this->any())->method('getUpdateRefUrl')->willReturn('url');
+        $oOrdeObj = new NetsOrder(null, $oCommonHelper, null, $oMockOrder);
+        $result = $oOrdeObj->processOrder(100);
+        $this->assertTrue($result);
+    }
+
+    /**
+     * Test case to update Ordernr of order
+     */
+    public function testUpdateOrdernr()
+    {
+        $oMockOrder = $this->getMockBuilder(Order::class)->setMethods(['finalizeOrder'])->getMock();
+        $oMockOrder->oxorder__oxordernr = new Field(true);
+        //$oMockOrder->oxorder__oxordernr = 100;
+        $oOrdeObj = new NetsOrder(null, null, null, $oMockOrder);
+        $result = $oOrdeObj->updateOrdernr(100);
+        $this->assertTrue($result);
+    }
+
+    /**
+     * Test case to get Order Id of order
+     */
+    public function testGetOrderId()
+    {
+        $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Application\Model\Basket::class);
+        $mockBuilder->setMethods(['getOrderId']);
+        $basket = $mockBuilder->getMock();
+        $basket->expects($this->any())->method("getOrderId")->willReturn(100);
+
+        \oxRegistry::getSession()->setBasket($basket);
+
+        $result = $this->orderObject->getOrderId();
+        $this->assertNotEmpty($result);
+    }
+
+    /**
+     * Test case to get current order from basket
+     */
+    public function testGetDiscountSum()
+    {
+        $vouchersObj = new \stdClass;
+        $vouchersObj->dVoucherdiscount = 122;
+        $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Application\Model\Basket::class);
+        $mockBuilder->setMethods(['getTotalDiscount', 'getBruttoPrice',  'getVouchers']);
+        $basket = $mockBuilder->getMock();
+        //$basket->expects($this->any())->method('getPaymentCosts')->willReturn(-100);
+        $basket->expects($this->any())->method('getBruttoPrice')->willReturn(100);
+        $basket->expects($this->any())->method('getTotalDiscount')->will($this->returnValue($basket));
+
+
+        $basket->expects($this->any())->method('getVouchers')->willReturn(array(0 => $vouchersObj));
+
+        $result = $this->orderObject->getDiscountSum($basket);
+        $this->assertNotEmpty($result);
     }
 
     /**
      * Test case for OrderController::isEmbedded()
      */
-    public function testIsEmbedded() {
+    public function testIsEmbedded()
+    {
         $embedded = $this->orderObject->isEmbedded();
         if ($embedded) {
             $this->assertTrue($embedded);
         } else {
             $this->assertFalse($embedded);
         }
+        \oxRegistry::getConfig()->setConfigParam('nets_checkout_mode', true);
+        $embedded = $this->orderObject->isEmbedded();
+        $this->assertTrue($embedded);
     }
 
     /**
-     * Function set basket item
-     * @return object
+     * Test case for Order::savePaymentDetails()
      */
-    public function setUpBasket($oBasket, $productsIds) {
-        $oBasket->setDiscountCalcMode(true);
-        \oxRegistry::getConfig()->getConfigParam('blAllowUnevenAmounts', true);
-        foreach ($productsIds as $id) {
-            $oBasket->addToBasket($id, 1);
-        }
-        $oBasket->calculateBasket(true);
-        //basket name in session will be "basket"
-        \oxRegistry::getConfig()->setConfigParam('blMallSharedBasket', 1);
-        return $oBasket;
+    public function testSavePaymentDetails()
+    {
+        $result = $this->orderObject->savePaymentDetails(json_decode('{
+            "payment":{
+               "paymentId":"0126000062a745c1f24370d976ebd20e",
+               "checkout":{
+                  "url":"http://oxideshop.local:81/index.php?cl=thankyou"
+               },
+               "charges":[
+                  {
+                     "chargeId":"00ab000062a7462cf24370d976ebd21d",
+                     "amount":32900,
+                     "created":"2022-06-13T14:14:04.5570+00:00",
+                     "orderItems":[
+                        {
+                           "reference":"2103",
+                           "name":"Wakeboard GROOVE",
+                           "quantity":1.0,
+                           "unit":"pcs",
+                           "unitPrice":27647,
+                           "taxRate":1900,
+                           "taxAmount":5253,
+                           "grossTotalAmount":32900,
+                           "netTotalAmount":27647
+                        }
+                     ]
+                  }
+               ]
+            }
+         }', true));
+        $this->assertTrue($result);
     }
 
     /**
-     * Function get basket item
-     * @return object
+     * Function to get user id
+     * @return string
      */
-    public function getBasket() {
-        $orderLines = $this->getOrderLinesData(1);
-        $ids = ['ed6573c0259d6a6fb641d106dcb2faec'];
-        /** @var Basket|KlarnaBasket $oBasket */
-        $oBasket = oxNew(Basket::class);
-        return $this->setUpBasket($oBasket, $ids);
-    }
-
-    /**
-     * Function to Get Order Lines Data
-     * @return array
-     */
-    protected function getOrderLinesData($anonOn = 0, $wrapping = 0) {
-        $homeUrl = \oxRegistry::getConfig()->getConfigParam('sShopURL');
-        $lines = [
-            'order_lines' => [
-                [
-                    'type' => 'physical',
-                    'reference' => ($anonOn ? '7b1ce3d73b70f1a7246e7b76a35fb552' : '2103'),
-                    'quantity' => 1,
-                    'unit_price' => 32900,
-                    'tax_rate' => 1900,
-                    'total_amount' => 32900,
-                    'total_tax_amount' => 5253,
-                    'quantity_unit' => 'pcs',
-                    'name' => ($anonOn ? 'Produktname 1' : 'Wakeboard LIQUID FORCE GROOVE 2010'),
-                    'product_url' => $homeUrl . 'index.php',
-                    'image_url' => $homeUrl . 'out/pictures/generated/product/1/540_340_75/lf_groove_2010_1.jpg',
-                    'product_identifiers' => [
-                        'category_path' => '',
-                        'global_trade_item_number' => '',
-                        'manufacturer_part_number' => '',
-                        'brand' => '',
-                    ],
-                ],
-                [
-                    'type' => 'shipping_fee',
-                    'reference' => 'SRV_DELIVERY',
-                    'name' => 'Standard',
-                    'quantity' => 1,
-                    'total_amount' => 0,
-                    'total_discount_amount' => 0,
-                    'total_tax_amount' => 0,
-                    'unit_price' => 0,
-                    'tax_rate' => 0,
-                ],
-            ],
-            'order_amount' => 32900,
-            'order_tax_amount' => 5253,
-        ];
-        if ($anonOn) {
-            unset($lines['order_lines'][0]['product_url']);
-            unset($lines['order_lines'][0]['image_url']);
-            unset($lines['order_lines'][0]['product_identifiers']);
-        }
-        if ($wrapping) {
-            //$lines['order_lines'];
-        }
-        return $lines;
+    public function getUserId()
+    {
+        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
+        $sSQL_select = "SELECT oxid FROM oxuser LIMIT 1";
+        return $oDB->getOne($sSQL_select);
     }
 
     /**
      * Function to get data string response
      * @return array
      */
-    public function getDatastring() {
+    public function getDatastring()
+    {
         return $datastring = '{
                         "order":{
                            "items":[
@@ -226,6 +477,28 @@ class OrderTest extends \Codeception\Test\Unit {
                                  "taxAmount":1450,
                                  "grossTotalAmount":7250,
                                  "netTotalAmount":5800
+                              },
+                              {
+                                 "reference":"shipping",
+                                 "name":"shipping",
+                                 "quantity":1,
+                                 "unit":"pcs",
+                                 "unitPrice":1000,
+                                 "taxRate":2000,
+                                 "taxAmount":200,
+                                 "grossTotalAmount":1200,
+                                 "netTotalAmount":1000
+                              },
+                              {
+                                 "reference":"discount",
+                                 "name":"discount",
+                                 "quantity":1,
+                                 "unit":"pcs",
+                                 "unitPrice":1000,
+                                 "taxRate":2000,
+                                 "taxAmount":-200,
+                                 "grossTotalAmount":-1200,
+                                 "netTotalAmount":-1000
                               }
                            ],
                            "amount":7250,

@@ -1,11 +1,6 @@
 <?php
 
 namespace Es\NetsEasy\Tests\Unit\Models;
-if (!class_exists('oePayPalOrder_parent')) {
-    class oePayPalOrder_parent extends \OxidEsales\Eshop\Application\Controller\OrderController
-    {
-    }
-}
 
 use Es\NetsEasy\extend\Application\Models\PaymentGateway as NetsPaymentGateway;
 
@@ -39,7 +34,8 @@ class PaymentGatewayTest extends \Codeception\Test\Unit
      */
     public function testExecutePayment()
     {
-        //$resultValue = $this->oPaymentGateway->executePayment(900);
+        $strvalue = 'test';
+        $resultValue = $this->oPaymentGateway->executePayment('test', $strvalue);
         $this->assertTrue(true);
     }
 

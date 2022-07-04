@@ -10,7 +10,8 @@ use Es\NetsEasy\extend\Application\Models\OrderOverview;
  * Class controls Nets Order Overview - In use for admin order list customization
  * Cancel, Capture, Refund and Partial nets payments
  */
-class OrderOverviewController extends OrderOverviewController_parent {
+class OrderOverviewController extends OrderOverviewController_parent
+{
 
     const ENDPOINT_TEST = 'https://test.api.dibspayment.eu/v1/payments/';
     const ENDPOINT_LIVE = 'https://api.dibspayment.eu/v1/payments/';
@@ -20,34 +21,61 @@ class OrderOverviewController extends OrderOverviewController_parent {
 
     protected $_NetsLog;
     protected $oOrderOverview;
-
-    public function __construct() {
+    protected $oCommonHelper = false;
+    protected $oxUtils;
+    protected $oOrderOverviewController;
+    public function __construct($oOrderOverviewController = null, $oOrderOverview = null, $commonHelper = null, $oxUtils = null)
+    {
         $this->_NetsLog = $this->getConfig()->getConfigParam('nets_blDebug_log');
         NetsLog::log($this->_NetsLog, "NetsOrderOverview, constructor");
-        $this->oOrderOverview = \oxNew(OrderOverview::class);
+        
+        if (!$oOrderOverviewController) {
+            $this->oOrderOverviewController = $this;
+        }else {
+            $this->oOrderOverviewController = $oOrderOverviewController;
+        } 
+        if (!$oOrderOverview) {
+            $this->oOrderOverview = \oxNew(OrderOverview::class);
+        } else {
+            $this->oOrderOverview = $oOrderOverview;
+        }
+        if (!$commonHelper) {
+            $this->oCommonHelper = \oxNew(CommonHelper::class);
+        } else {
+            $this->oCommonHelper = $commonHelper;
+        }
+        if (!$oxUtils) {
+            $this->oxUtils = \oxRegistry::getUtils();
+        } else {
+            $this->oxUtils = $oxUtils;
+        }
     }
 
     /**
      * Function to check the nets payment status and display in admin order list backend page
      * @return array
      */
-    public function isEasy($oxoder_id) {
-        $payMethod = $this->getPaymentMethod($oxoder_id);
+    public function isEasy($oxoder_id)
+    {
+        $allStatusReturn = false;
+        $payMethod = $this->oOrderOverviewController->getPaymentMethod($oxoder_id);
         if ($payMethod == 'nets_easy') {
             $allStatus = $this->oOrderOverview->getEasyStatus($oxoder_id);
-            return array(
+            $allStatusReturn = array(
                 'payStatus' => $allStatus['payStatus'],
                 'langStatus' => $allStatus['langStatus']
             );
         }
+        return $allStatusReturn;
     }
 
     /**
      * Function to get pay language status
      * @return array
      */
-    public function getPayLangStatus($response) {
-        return $this->oOrderOverview->getPaymentStatus($response);
+    public function getPayLangStatus($response, $oxoder_id)
+    {
+        return $this->oOrderOverview->getPaymentStatus($response, $oxoder_id);
     }
 
     /*
@@ -55,11 +83,12 @@ class OrderOverviewController extends OrderOverviewController_parent {
      * redirects to admin overview listing page
      */
 
-    public function getOrderCharged() {
+    public function getOrderCharged()
+    {
         $stoken = \oxRegistry::getConfig()->getRequestParameter('stoken');
         $admin_sid = \oxRegistry::getConfig()->getRequestParameter('force_admin_sid');
         $this->oOrderOverview->getOrderCharged();
-        \oxRegistry::getUtils()->redirect($this->getConfig()
+        return $this->oxUtils->redirect($this->getConfig()
                         ->getSslShopUrl() . 'admin/index.php?cl=admin_order&force_admin_sid' . $admin_sid . '&stoken=' . $stoken);
     }
 
@@ -68,11 +97,12 @@ class OrderOverviewController extends OrderOverviewController_parent {
      * redirects to admin overview listing page
      */
 
-    public function getOrderRefund() {
+    public function getOrderRefund()
+    {
         $stoken = \oxRegistry::getConfig()->getRequestParameter('stoken');
         $admin_sid = \oxRegistry::getConfig()->getRequestParameter('force_admin_sid');
         $this->oOrderOverview->getOrderRefund();
-        \oxRegistry::getUtils()->redirect($this->getConfig()
+        return $this->oxUtils->redirect($this->getConfig()
                         ->getSslShopUrl() . 'admin/index.php?cl=admin_order&force_admin_sid' . $admin_sid . '&stoken=' . $stoken);
     }
 
@@ -81,22 +111,23 @@ class OrderOverviewController extends OrderOverviewController_parent {
      * redirects to admin overview listing page
      */
 
-    public function getOrderCancel() {
+    public function getOrderCancel()
+    {
         $stoken = \oxRegistry::getConfig()->getRequestParameter('stoken');
         $admin_sid = \oxRegistry::getConfig()->getRequestParameter('force_admin_sid');
         $oxorder = \oxRegistry::getConfig()->getRequestParameter('oxorderid');
         $orderno = \oxRegistry::getConfig()->getRequestParameter('orderno');
-        $data = $this->getOrderItems($oxorder);
-        $payment_id = CommonHelper::getPaymentId($oxorder);
+        $data = $this->oOrderOverviewController->getOrderItems($oxorder);
+        $payment_id = $this->oCommonHelper->getPaymentId($oxorder);
         // call cancel api here
-        $cancelUrl = CommonHelper::getVoidPaymentUrl($payment_id);
+        $cancelUrl = $this->oCommonHelper->getVoidPaymentUrl($payment_id);
         $body = [
             'amount' => $data['totalAmt'],
             'orderItems' => $data['items']
         ];
-        $api_return = CommonHelper::getCurlResponse($cancelUrl, 'POST', json_encode($body));
+        $api_return = $this->oCommonHelper->getCurlResponse($cancelUrl, 'POST', json_encode($body));
         $response = json_decode($api_return, true);
-        \oxRegistry::getUtils()->redirect($this->getConfig()
+        return $this->oxUtils->redirect($this->getConfig()
                         ->getSslShopUrl() . 'admin/index.php?cl=admin_order&force_admin_sid' . $admin_sid . '&stoken=' . $stoken);
     }
 
@@ -106,7 +137,8 @@ class OrderOverviewController extends OrderOverviewController_parent {
      * @return array order items and amount
      */
 
-    public function getOrderItems($oxorder, $blExcludeCanceled = true) {
+    public function getOrderItems($oxorder, $blExcludeCanceled = true)
+    {
         return $this->oOrderOverview->getOrderItems($oxorder, $blExcludeCanceled = true);
     }
 
@@ -116,8 +148,9 @@ class OrderOverviewController extends OrderOverviewController_parent {
      * @return array of reserved, partial charged,partial refunded items
      */
 
-    public function checkPartialItems($oxid) {
-        $prodItems = $this->getOrderItems($oxid);
+    public function checkPartialItems($oxid)
+    {
+        $prodItems = $this->oOrderOverviewController->getOrderItems($oxid);
         $products = [];
         $chargedItems = [];
         $refundedItems = [];
@@ -129,13 +162,14 @@ class OrderOverviewController extends OrderOverviewController_parent {
                 'price' => $items['oxbprice']
             );
         }
-        $api_return = CommonHelper::getCurlResponse(CommonHelper::getApiUrl() . CommonHelper::getPaymentId($oxid), 'GET');
+        $api_return = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $this->oCommonHelper->getPaymentId($oxid), 'GET');
         $response = json_decode($api_return, true);
+         
         if (!empty($response['payment']['charges'])) {
-            $chargedItems = $this->getChargedItems($response);
+            $chargedItems = $this->oOrderOverviewController->getChargedItems($response); 
         }
         if (!empty($response['payment']['refunds'])) {
-            $refundedItems = $this->getRefundedItems($response);
+            $refundedItems = $this->oOrderOverviewController->getRefundedItems($response);
         }
         // get list of partial charged items and check with quantity and send list for charge rest of items
         foreach ($products as $key => $prod) {
@@ -166,7 +200,7 @@ class OrderOverviewController extends OrderOverviewController_parent {
                 $chargedItems[$key]['quantity'] = $prod['quantity'];
             }
         }
-        $lists = $this->getLists($response, $itemsList, $chargedItems, $refundedItems);
+        $lists = $this->oOrderOverviewController->getLists($response, $itemsList, $chargedItems, $refundedItems);
         // pass reserved, charged, refunded items list to frontend
         return $lists;
     }
@@ -176,7 +210,8 @@ class OrderOverviewController extends OrderOverviewController_parent {
      * @return array
      */
 
-    public function getLists($response, $itemsList, $chargedItems, $refundedItems) {
+    public function getLists($response, $itemsList, $chargedItems, $refundedItems)
+    {
         $reserved = $response['payment']['summary']['reservedAmount'];
         $charged = $response['payment']['summary']['chargedAmount'];
         if ($reserved != $charged) {
@@ -200,7 +235,8 @@ class OrderOverviewController extends OrderOverviewController_parent {
      * @return int
      */
 
-    public function getPartial($oxoder_id) {
+    public function getPartial($oxoder_id)
+    {
         $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
         $sSQL_select = "SELECT partial_amount FROM oxnets WHERE oxorder_id = ? LIMIT 1";
         $partial_amount = $oDB->getOne($sSQL_select, [
@@ -214,7 +250,8 @@ class OrderOverviewController extends OrderOverviewController_parent {
      * @return bool
      */
 
-    public function debugMode() {
+    public function debugMode()
+    {
         $debug = $this->getConfig()->getConfigParam('nets_blDebug_log');
         return $debug;
     }
@@ -224,8 +261,9 @@ class OrderOverviewController extends OrderOverviewController_parent {
      * @return array
      */
 
-    public function getResponse($oxoder_id) {
-        $api_return = CommonHelper::getCurlResponse(CommonHelper::getApiUrl() . CommonHelper::getPaymentId($oxoder_id), 'GET');
+    public function getResponse($oxoder_id)
+    {
+        $api_return = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() .$this->oCommonHelper->getPaymentId($oxoder_id), 'GET');
         $response = json_decode($api_return, true);
         $result = json_encode($response, JSON_PRETTY_PRINT);
         return $result;
@@ -237,7 +275,8 @@ class OrderOverviewController extends OrderOverviewController_parent {
      * @return payment method
      */
 
-    public function getPaymentMethod($oxoder_id) {
+    public function getPaymentMethod($oxoder_id)
+    {
         return $this->oOrderOverview->getPaymentMethod($oxoder_id);
     }
 
@@ -246,7 +285,8 @@ class OrderOverviewController extends OrderOverviewController_parent {
      * @return payment api url
      */
 
-    public function getApiUrl() {
+    public function getApiUrl()
+    {
         if ($this->getConfig()->getConfigParam('nets_blMode') == 0) {
             return self::ENDPOINT_TEST;
         } else {
@@ -259,7 +299,8 @@ class OrderOverviewController extends OrderOverviewController_parent {
      * @return array
      */
 
-    public function getChargedItems($response) {
+    public function getChargedItems($response)
+    {
         $qty = 0;
         $price = 0;
         $chargedItems = [];
@@ -292,7 +333,8 @@ class OrderOverviewController extends OrderOverviewController_parent {
      * @return array
      */
 
-    public function getRefundedItems($response) {
+    public function getRefundedItems($response)
+    {
         $qty = 0;
         $price = 0;
         $refundedItems = [];
@@ -323,8 +365,9 @@ class OrderOverviewController extends OrderOverviewController_parent {
      * @return payment id
      */
 
-    public function getPaymentId($oxoder_id) {
-        return CommonHelper::getPaymentId($oxoder_id);
+    public function getPaymentId($oxoder_id)
+    {
+        return $this->oCommonHelper->getPaymentId($oxoder_id);
     }
 
 }
