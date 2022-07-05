@@ -156,7 +156,13 @@ class OrderTest extends \Codeception\Test\Unit
         $oUser->Load($sUserID);
         $result = $this->orderObject->setLanguage($oUser, $sTranslation = null, $basket);
         $this->assertArrayHasKey('language', $result);
-        $this->assertNotEmpty($result['checkout_type']);
+        
+        if($result){
+             $this->assertNotEmpty($result['checkout_type']);
+        }else{
+            $this->assertNull($result);
+        }
+       
     }
 
     /**

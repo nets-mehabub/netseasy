@@ -18,13 +18,48 @@
 * See our user guide with illustrations in /nets/docs/Oxid_guide_Nets.pdf
 
 ### Download / Installation
+1] Install Nets Plugin:
 
-1. Just go to the directory of your Oxid composer.json file and perform the following command:
-   composer require payone-gmbh/oxid-6
-2. Clear your cache by 3.rd party plugin or simply delete all files in the folder root /source/tmp.
-   IMPORTANT : do not delete the .htaccess file or the smarty folder but only its content.
-3. Connect with a SSH client and navigate to root directory of your Oxid 6 installation and run command :
-   php vendor/bin/oe-console oe:module:install-configuration source/modules/nets
+    Run command: composer require nets-mehabub/ox6_metadata
+
+    Add below lines of code in composer.json file
+
+    "psr-4": {
+                "Es\\NetsEasy\\":"./source/modules/es/esnetseasy"
+            }
+
+    Run command: composer dump-autoload
+
+2] Activate the Nets module:
+
+    vendor/bin/oe-console oe:module:install .\source\modules\es\esnetseasy
+    vendor/bin/oe-console oe:module:activate esnetseasy
+    vendor/bin/oe-console oe:module:install-configuration .\source\modules\es\esnetseasy
+    vendor/bin/oe-console oe:module:apply-configuration
+
+3] Initialize Codeception:
+    vendor/bin/codecept bootstrap
+
+4] Add below lines in root file codeception.yml
+    coverage:
+        enabled: true
+        includeUncoveredFiles: false
+        include:
+            - source/modules/es/esnetseasy/extend/*
+            - source/modules/es/esnetseasy/Core/*
+            - source/modules/es/esnetseasy/Api/*
+        exclude:
+            - source/modules/es/esnetseasy/Tests/*
+
+5] Add xDebug driver to run code coverage
+    Follow instructions from xDebug documentation
+    https://xdebug.org/docs/install
+
+6] .\vendor\bin\codecept run --coverage --coverage-xml --coverage-html
+    
+7] Congratulation code coverage looks like below
+ 
+    ![alt text](https://github.com/nets-mehabub/netseasy/nets-mehabub/netseasy/master/code-coverage-report.jpeg?raw=true)
 
 ### Configuration
 1. To configure and setup the plugin navigate to : Admin > Extensions > Modules
