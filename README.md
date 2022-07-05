@@ -64,8 +64,8 @@
 7] .\vendor\bin\codecept run --coverage --coverage-xml --coverage-html
     
 8] Congratulation code coverage looks like below
-
     ![Alt text](code-coverage-report.JPG?raw=true "Title")
+    ![Screenshot](code-coverage-report.JPG)
     
 ### Configuration
 1. To configure and setup the plugin navigate to : Admin > Extensions > Modules
