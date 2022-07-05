@@ -40,7 +40,9 @@
 3] Initialize Codeception:
     vendor/bin/codecept bootstrap
 
-4] Add below lines in root file codeception.yml
+4] Add or Update below lines in root file codeception.yml
+    paths:
+        test:source/modules/es/esnetseasy/Tests
     coverage:
         enabled: true
         includeUncoveredFiles: false
@@ -51,16 +53,23 @@
         exclude:
             - source/modules/es/esnetseasy/Tests/*
 
-5] Add xDebug driver to run code coverage
+5] Update below lines in test_config.php
+	shop_tests_path: source/modules/es/esnetseasy/Tests
+    	partial_module_paths: source/modules/es/esnetseasy/Tests
+
+6] Add xDebug driver to run code coverage
     Follow instructions from xDebug documentation
     https://xdebug.org/docs/install
 
-6] .\vendor\bin\codecept run --coverage --coverage-xml --coverage-html
+7] .\vendor\bin\codecept run --coverage --coverage-xml --coverage-html
     
-7] Congratulation code coverage looks like below
- 
-    ![alt text](https://github.com/nets-mehabub/netseasy/nets-mehabub/netseasy/master/code-coverage-report.jpeg?raw=true)
-
+8] Congratulation code coverage looks like below
+    ![Alt text](code-coverage-report.JPG?raw=true "Title")
+    ![Screenshot](code-coverage-report.JPG)
+    ![alt text](https://github.com/nets-mehabub/netseasy/blob/master/code-coverage-report.JPG?raw=true)
+    <p align="center">
+        <img src="code-coverage-report.JPG" width="350" title="hover text">  
+    </p>
 ### Configuration
 1. To configure and setup the plugin navigate to : Admin > Extensions > Modules
 2. Locate and select Nets Easy plugin from the list of installed plugins.
