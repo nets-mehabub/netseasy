@@ -64,7 +64,6 @@
 7] .\vendor\bin\codecept run --coverage --coverage-xml --coverage-html
     
 8] Congratulation code coverage looks like below
-
     ![Alt text](code-coverage-report.JPG?raw=true "Title")
     
     
