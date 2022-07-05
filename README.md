@@ -64,12 +64,9 @@
 7] .\vendor\bin\codecept run --coverage --coverage-xml --coverage-html
     
 8] Congratulation code coverage looks like below
-    ![Alt text](code-coverage-report.JPG?raw=true "Title")
-    ![Screenshot](code-coverage-report.JPG)
-    ![alt text](https://github.com/nets-mehabub/netseasy/blob/master/code-coverage-report.JPG?raw=true)
-    <p align="center">
-        <img src="code-coverage-report.JPG" width="350" title="hover text">  
-    </p>
+
+    ![Alt text](code-coverage-report.PNG?raw=true "Title")
+    
 ### Configuration
 1. To configure and setup the plugin navigate to : Admin > Extensions > Modules
 2. Locate and select Nets Easy plugin from the list of installed plugins.
