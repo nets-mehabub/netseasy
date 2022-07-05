@@ -65,7 +65,7 @@
     
 8] Congratulation code coverage looks like below
 
-    ![Alt text](code-coverage-report.PNG?raw=true "Title")
+    ![Alt text](code-coverage-report.JPG?raw=true "Title")
     
 ### Configuration
 1. To configure and setup the plugin navigate to : Admin > Extensions > Modules
